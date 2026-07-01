@@ -611,6 +611,11 @@ button:disabled {
   animation: resultSwipeIn 420ms ease both;
   touch-action: none;
   perspective: 1000px;
+  cursor: grab;
+}
+
+.result-card.is-dragging {
+  cursor: grabbing;
 }
 
 .result-card-inner {
@@ -678,6 +683,15 @@ button:disabled {
   height: 100%;
   display: block;
   object-fit: cover;
+  object-position: center center;
+}
+
+.result-card-front .identity-image,
+.travel-card .identity-image {
+  width: calc(100% + 18px);
+  height: calc(100% + 18px);
+  margin: -9px;
+  max-width: none;
 }
 
 .mute-button {

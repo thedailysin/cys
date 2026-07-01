@@ -451,7 +451,7 @@ async function submitLead(event) {
   }
 
   state.lead = { name, email, phone };
-  state.identityKey = calculateIdentity(state.answerHistory);
+  state.identityKey = pickRandomIdentityKey();
   const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
   state.resultVariant = pickResultVariant(identity);
 
@@ -525,7 +525,7 @@ function preloadResultImage(imageUrl) {
 
 function renderResult(showConfetti) {
   if (!state.identityKey) {
-    state.identityKey = calculateIdentity(state.answerHistory);
+    state.identityKey = pickRandomIdentityKey();
   }
 
   const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
@@ -550,7 +550,12 @@ function renderResult(showConfetti) {
   `, () => {
     const resultCard = document.querySelector(".result-card");
     if (resultCard) {
-      resultCard.addEventListener("click", () => flipResultCard(resultCard));
+      setupSwipeCard(resultCard, {
+        animateOnSwipe: false,
+        onTap: () => flipResultCard(resultCard),
+        onLeft: () => flipResultCard(resultCard),
+        onRight: () => flipResultCard(resultCard)
+      });
     }
     document.getElementById("shareButton").addEventListener("click", shareResult);
     document.getElementById("playAgainButton").addEventListener("click", playAgain);
@@ -882,6 +887,15 @@ function pickResultVariant(identity) {
     description: descriptions[Math.floor(Math.random() * descriptions.length)] || "",
     offences: offenceSets[Math.floor(Math.random() * offenceSets.length)] || []
   };
+}
+
+function pickRandomIdentityKey() {
+  const identityKeys = Object.keys(IDENTITIES || {});
+  if (identityKeys.length === 0) {
+    return "sinnerAmateur";
+  }
+
+  return identityKeys[Math.floor(Math.random() * identityKeys.length)];
 }
 
 function formatIdentityMain(value) {
