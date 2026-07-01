@@ -199,8 +199,8 @@ function renderMuteButton() {
 
   const label = state.isMuted ? "Unmute music" : "Mute music";
   return `
-    <button class="mute-button" type="button" id="muteButton" aria-label="${label}">
-      ${state.isMuted ? "Sound Off" : "Sound On"}
+    <button class="mute-button ${state.isMuted ? "is-off" : "is-on"}" type="button" id="muteButton" aria-label="${label}">
+      Music
     </button>
   `;
 }
@@ -214,7 +214,9 @@ function toggleMute() {
 
   const muteButton = document.getElementById("muteButton");
   if (muteButton) {
-    muteButton.textContent = state.isMuted ? "Sound Off" : "Sound On";
+    muteButton.textContent = "Music";
+    muteButton.classList.toggle("is-off", state.isMuted);
+    muteButton.classList.toggle("is-on", !state.isMuted);
     muteButton.setAttribute("aria-label", state.isMuted ? "Unmute music" : "Mute music");
   }
 }
@@ -418,14 +420,14 @@ function renderResult() {
   const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey] || "";
 
   setScreen(`
-    <section class="screen is-changing">
+    <section class="screen result-screen is-changing">
       <div class="result-panel">
         <p class="result-kicker">You are a</p>
         ${renderResultCard(identity, imageUrl)}
         <p class="identity-description">${escapeHtml(identity.description)}</p>
-        <div class="button-row">
+        <div class="result-actions">
           <button class="button button-primary" type="button" id="shareButton">Forward to Someone Worse</button>
-          <button class="button button-secondary" type="button" id="playAgainButton">Play Again</button>
+          <button class="button button-secondary icon-button" type="button" id="playAgainButton" aria-label="Play Again">↻</button>
         </div>
       </div>
     </section>
@@ -436,8 +438,10 @@ function renderResult() {
 }
 
 function renderResultCard(identity, imageUrl) {
+  const textClass = shouldUseBlackCardText(state.identityKey) ? "has-black-text" : "has-white-text";
+
   return `
-    <div class="result-card">
+    <div class="result-card ${textClass}">
       ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
       ${renderIdentityTitle(identity)}
     </div>
@@ -468,9 +472,10 @@ ${CONFIG.SHARE_URL}`;
     identity: identity.title
   });
 
-  try {
-    const shareFile = await createShareCardFile(identity);
-    if (navigator.share) {
+  const shareFile = await createShareCardFile(identity);
+
+  if (navigator.share) {
+    try {
       if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
         await navigator.share({
           text: shareText,
@@ -481,13 +486,24 @@ ${CONFIG.SHARE_URL}`;
 
       await navigator.share({ text: shareText });
       return;
+    } catch (error) {
+      if (error && error.name === "AbortError") {
+        return;
+      }
+      console.error("Native sharing failed", error);
     }
+  }
 
+  try {
     await navigator.clipboard.writeText(shareText);
     showCopiedState();
   } catch (error) {
-    console.error("Sharing failed", error);
-    showCopiedState("Copy failed");
+    console.error("Clipboard sharing failed", error);
+    if (copyWithTextarea(shareText)) {
+      showCopiedState();
+      return;
+    }
+    showCopiedState("Well, that's embarrassing. Screenshot?");
   }
 }
 
@@ -515,7 +531,7 @@ async function createShareCardFile(identity) {
     drawCoverImage(context, image, 160, 230, 760, 900);
 
     const displayTitle = Array.isArray(identity.displayTitle) ? identity.displayTitle : [identity.title, ""];
-    context.fillStyle = "#ffffff";
+    context.fillStyle = shouldUseBlackCardText(state.identityKey) ? "#000000" : "#ffffff";
     context.font = "400 88px Outfit, sans-serif";
     context.fillText(formatIdentityMain(displayTitle[0] || ""), canvas.width / 2, 990);
     context.font = "400 86px 'Absolut Handwritten', Outfit, sans-serif";
@@ -534,6 +550,24 @@ async function createShareCardFile(identity) {
   } catch (error) {
     console.error("Share image creation failed", error);
     return null;
+  }
+}
+
+function copyWithTextarea(text) {
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    textarea.remove();
+    return copied;
+  } catch (error) {
+    console.error("Textarea copy failed", error);
+    return false;
   }
 }
 
@@ -607,6 +641,10 @@ function toTitleCase(value) {
   return String(value)
     .toLowerCase()
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function shouldUseBlackCardText(identityKey) {
+  return ["professionalBadInfluence", "dailySinSaint", "sinnerAmateur"].includes(identityKey);
 }
 
 function escapeHtml(value) {
