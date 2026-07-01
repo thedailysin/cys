@@ -16,8 +16,10 @@ const state = {
 let audio = null;
 let posthogReady = false;
 let posthogFailed = false;
+let interactionLocked = false;
 const pendingPostHogEvents = [];
 const RETORT_DURATION = 2160;
+const CARD_COLORS = ["#37C155", "#47D86A", "#22B84B", "#7BEA8F", "#B6F35C", "#19C98B", "#D8FF64"];
 
 function track(eventName, properties) {
   try {
@@ -251,13 +253,15 @@ function startGame() {
 }
 
 function renderQuiz() {
+  interactionLocked = false;
   const question = QUESTIONS[state.currentQuestionIndex];
-  const progress = (state.currentQuestionIndex / QUESTIONS.length) * 100;
 
   setScreen(`
-    <section class="screen is-changing">
+    <section class="screen quiz-screen is-changing">
       <div class="quiz-shell">
-        <div class="quiz-content" id="quizContent">
+        <div class="swipe-card quiz-content" id="quizContent" style="--card-bg: ${getCardColor(state.currentQuestionIndex)}">
+          <div class="swipe-label swipe-label-left">${escapeHtml(question.answers[0].text)}</div>
+          <div class="swipe-label swipe-label-right">${escapeHtml(question.answers[1].text)}</div>
           <h2 class="question">${escapeHtml(question.question)}</h2>
           <div class="answers">
             ${question.answers.map((answer, index) => `
@@ -269,32 +273,50 @@ function renderQuiz() {
               >${escapeHtml(answer.text)}</button>
             `).join("")}
           </div>
+          <p class="swipe-hint">Swipe left or right</p>
         </div>
-        ${renderProgress(progress)}
+        ${renderProgress()}
       </div>
     </section>
   `, () => {
     app.querySelectorAll(".answer-button").forEach((button) => {
       button.addEventListener("click", () => selectAnswer(Number(button.dataset.answerIndex)));
     });
+    setupSwipeCard(document.getElementById("quizContent"), {
+      onLeft: () => selectAnswer(0, "left"),
+      onRight: () => selectAnswer(1, "right")
+    });
   });
 }
 
-function renderProgress(progress) {
+function renderProgress() {
   return `
-    <div class="progress" aria-hidden="true">
-      <div class="progress-fill" style="width: ${progress}%"></div>
+    <div class="story-progress" style="--segments: ${QUESTIONS.length}" aria-hidden="true">
+      ${QUESTIONS.map((question, index) => {
+        const className = index < state.currentQuestionIndex
+          ? "story-segment is-complete"
+          : index === state.currentQuestionIndex
+            ? "story-segment is-current"
+            : "story-segment";
+        return `<span class="${className}"></span>`;
+      }).join("")}
     </div>
   `;
 }
 
-function selectAnswer(answerIndex) {
+function selectAnswer(answerIndex, direction) {
+  if (interactionLocked) {
+    return;
+  }
+
   const question = QUESTIONS[state.currentQuestionIndex];
   const answer = question.answers[answerIndex];
 
   if (!answer) {
     return;
   }
+
+  interactionLocked = true;
 
   state.answerHistory.push(answer.traits);
   track("question_answered", {
@@ -305,12 +327,19 @@ function selectAnswer(answerIndex) {
   });
 
   const quizContent = document.getElementById("quizContent");
-  quizContent.classList.add("is-fading");
+  if (quizContent) {
+    quizContent.classList.add(direction === "right" ? "is-swiped-right" : "is-swiped-left");
+  }
 
   window.setTimeout(() => {
+    if (!quizContent) {
+      return;
+    }
+    quizContent.classList.remove("is-swiped-left", "is-swiped-right");
+    quizContent.style.transform = "";
     quizContent.innerHTML = `<p class="retort">${escapeHtml(answer.retort)}</p>`;
-    quizContent.classList.remove("is-fading");
-  }, 240);
+    quizContent.classList.add("is-retort");
+  }, 300);
 
   window.setTimeout(() => {
     state.currentQuestionIndex += 1;
@@ -326,8 +355,8 @@ function selectAnswer(answerIndex) {
 
 function renderLeadForm() {
   setScreen(`
-    <section class="screen is-changing">
-      <form class="lead-form" id="leadForm" novalidate>
+    <section class="screen lead-screen is-changing">
+      <form class="swipe-card lead-form" id="leadForm" style="--card-bg: #F4FFF6" novalidate>
         <h2 class="screen-title"><span>Before we make this</span> <span class="handwritten">Official</span></h2>
 
         <label class="field">
@@ -347,21 +376,35 @@ function renderLeadForm() {
 
         <p class="form-error" id="formError" role="alert"></p>
         <button class="button button-primary" type="submit" id="leadSubmit">Reveal Result</button>
+        <p class="swipe-hint">Swipe to reveal</p>
       </form>
+      ${renderProgress()}
     </section>
   `, () => {
-    document.getElementById("leadForm").addEventListener("submit", submitLead);
+    const form = document.getElementById("leadForm");
+    form.addEventListener("submit", submitLead);
+    setupSwipeCard(form, {
+      ignoreInteractive: true,
+      onLeft: () => submitLead(),
+      onRight: () => submitLead()
+    });
   });
 }
 
 async function submitLead(event) {
-  event.preventDefault();
+  if (event) {
+    event.preventDefault();
+  }
 
   const name = document.getElementById("leadName").value.trim();
   const email = document.getElementById("leadEmail").value.trim();
   const phone = document.getElementById("leadPhone").value.trim();
   const error = document.getElementById("formError");
   const button = document.getElementById("leadSubmit");
+
+  if (button.disabled) {
+    return;
+  }
 
   if (!name) {
     error.textContent = "Name is required.";
@@ -435,6 +478,76 @@ function renderResult() {
     document.getElementById("shareButton").addEventListener("click", shareResult);
     document.getElementById("playAgainButton").addEventListener("click", playAgain);
   });
+}
+
+function setupSwipeCard(card, options) {
+  if (!card) {
+    return;
+  }
+
+  const threshold = 86;
+  let startX = 0;
+  let startY = 0;
+  let currentX = 0;
+  let dragging = false;
+
+  card.addEventListener("pointerdown", (event) => {
+    if (options.ignoreInteractive && event.target.closest("input, button, textarea, select, a")) {
+      return;
+    }
+
+    dragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+    currentX = 0;
+    card.classList.add("is-dragging");
+    card.setPointerCapture(event.pointerId);
+  });
+
+  card.addEventListener("pointermove", (event) => {
+    if (!dragging) {
+      return;
+    }
+
+    currentX = event.clientX - startX;
+    const currentY = event.clientY - startY;
+    const rotate = currentX / 18;
+    card.style.transform = `translate(${currentX}px, ${currentY * 0.12}px) rotate(${rotate}deg)`;
+    card.dataset.swipe = currentX < 0 ? "left" : "right";
+  });
+
+  card.addEventListener("pointerup", (event) => {
+    if (!dragging) {
+      return;
+    }
+
+    dragging = false;
+    card.classList.remove("is-dragging");
+    card.releasePointerCapture(event.pointerId);
+
+    if (Math.abs(currentX) >= threshold) {
+      if (currentX < 0) {
+        options.onLeft();
+      } else {
+        options.onRight();
+      }
+      return;
+    }
+
+    card.style.transform = "";
+    card.removeAttribute("data-swipe");
+  });
+
+  card.addEventListener("pointercancel", () => {
+    dragging = false;
+    card.classList.remove("is-dragging");
+    card.style.transform = "";
+    card.removeAttribute("data-swipe");
+  });
+}
+
+function getCardColor(index) {
+  return CARD_COLORS[index % CARD_COLORS.length];
 }
 
 function renderResultCard(identity, imageUrl) {
