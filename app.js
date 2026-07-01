@@ -375,6 +375,8 @@ function renderRetort(retort) {
 }
 
 function renderLeadForm() {
+  interactionLocked = false;
+
   setScreen(`
     <section class="screen lead-screen is-changing">
       <div class="deck-stage">
@@ -397,7 +399,8 @@ function renderLeadForm() {
           </label>
 
           <p class="form-error" id="formError" role="alert"></p>
-          <p class="lead-disclaimer">Swipe to reveal. By swiping, you agree to hear from The Daily Sin about offers, updates, and questionable choices.</p>
+          <p class="lead-swipe-copy">Swipe to reveal</p>
+          <p class="lead-disclaimer">By swiping, you agree to hear from The Daily Sin about offers, updates, and questionable choices.</p>
         </form>
       </div>
       ${renderProgress()}
@@ -470,7 +473,7 @@ async function submitLead(event) {
 
   window.setTimeout(() => {
     renderResultTravel();
-  }, 260);
+  }, 420);
 }
 
 async function submitLeadPayload(payload) {

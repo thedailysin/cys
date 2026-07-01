@@ -28,15 +28,15 @@
 }
 
 html {
-  height: 90vh;
-  min-height: 90vh;
+  height: 80vh;
+  min-height: 80vh;
   overflow: hidden;
   background: var(--white);
 }
 
 body {
-  height: 90vh;
-  min-height: 90vh;
+  height: 80vh;
+  min-height: 80vh;
   margin: 0;
   overflow: hidden;
   background: var(--white);
@@ -69,15 +69,15 @@ button:disabled {
 .app {
   position: relative;
   width: min(100%, var(--max-width));
-  height: 90vh;
-  min-height: 90vh;
+  height: 80vh;
+  min-height: 80vh;
   margin: 0 auto;
-  overflow: visible;
-  padding: max(18px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(18px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+  overflow: hidden;
+  padding: max(10px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
 }
 
 .screen {
-  height: calc(90vh - 36px);
+  height: calc(80vh - 20px);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -95,7 +95,7 @@ button:disabled {
 
 .result-screen {
   justify-content: flex-start;
-  padding-top: clamp(18px, 5vh, 44px);
+  padding-top: clamp(8px, 2vh, 22px);
   transform: translateY(0);
 }
 
@@ -220,7 +220,7 @@ button:disabled {
 .story-progress {
   position: fixed;
   left: 50%;
-  bottom: max(18px, env(safe-area-inset-bottom));
+  bottom: max(8px, env(safe-area-inset-bottom));
   z-index: 5;
   width: min(calc(100% - 36px), var(--max-width));
   display: grid;
@@ -271,7 +271,7 @@ button:disabled {
 .quiz-content,
 .quiz-card {
   min-height: 0;
-  height: min(58vh, 430px);
+  height: min(62vh, 460px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -284,7 +284,7 @@ button:disabled {
 .swipe-card {
   position: relative;
   width: 100%;
-  padding: clamp(22px, 5vh, 34px) 20px;
+  padding: clamp(18px, 4vh, 30px) 18px;
   border: 1px solid var(--black);
   border-radius: 28px;
   background: var(--card-bg, var(--green));
@@ -298,7 +298,7 @@ button:disabled {
   position: absolute;
   inset: 0;
   width: 100%;
-  height: min(58vh, 430px);
+  height: min(62vh, 460px);
   border: 1px solid var(--black);
   border-radius: 28px;
   background: var(--green);
@@ -373,7 +373,7 @@ button:disabled {
 
 .direction-choice {
   width: 100%;
-  min-height: 86px;
+  min-height: 112px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,6 +386,7 @@ button:disabled {
   font-weight: 400;
   text-align: center;
   line-height: 1.12;
+  overflow-wrap: anywhere;
   transition: transform 180ms ease, background-color 180ms ease;
 }
 
@@ -403,7 +404,7 @@ button:disabled {
 
 .retort-card {
   min-height: 0;
-  height: min(58vh, 430px);
+  height: min(62vh, 460px);
   display: grid;
   place-items: center;
   animation: cardRise 260ms ease both;
@@ -459,7 +460,7 @@ button:disabled {
   touch-action: none;
   display: grid;
   gap: var(--space-md);
-  min-height: min(58vh, 430px);
+  min-height: min(62vh, 460px);
 }
 
 .screen-title {
@@ -493,12 +494,20 @@ button:disabled {
 
 .field input {
   width: 100%;
-  min-height: 52px;
-  padding: 13px 16px;
+  min-height: 48px;
+  padding: 11px 16px;
   border: 1px solid var(--black);
   border-radius: 16px;
   background: var(--white);
   color: var(--black);
+}
+
+.lead-swipe-copy {
+  margin: 0;
+  color: var(--black);
+  font-size: 16px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .lead-disclaimer {
@@ -569,7 +578,7 @@ button:disabled {
 .result-card {
   position: relative;
   width: min(100%, 320px);
-  max-height: 50vh;
+  max-height: 42vh;
   aspect-ratio: 1 / 1.55;
   margin: 0 auto;
   overflow: hidden;
@@ -782,8 +791,8 @@ button:disabled {
 
 @media (min-width: 720px) {
   .app {
-    padding-top: 32px;
-    padding-bottom: 32px;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
 
   .landing-title {
@@ -795,12 +804,12 @@ button:disabled {
   }
 
   .result-screen {
-    padding-top: 48px;
+    padding-top: 16px;
   }
 
   .result-card {
-    width: min(100%, 360px);
-    max-height: none;
+    width: min(100%, 340px);
+    max-height: 44vh;
   }
 
   .identity-description {
