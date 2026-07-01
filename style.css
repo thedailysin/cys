@@ -556,40 +556,6 @@ button:disabled {
   text-align: center;
 }
 
-.identity-title {
-  position: absolute;
-  left: 20px;
-  right: 20px;
-  bottom: 34px;
-  display: grid;
-  gap: 4px;
-  margin: 0;
-  text-align: center;
-  color: var(--white);
-}
-
-.result-card.has-black-text .identity-title {
-  color: var(--black);
-}
-
-.result-card.has-white-text .identity-title {
-  color: var(--white);
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.42);
-}
-
-.identity-title-main {
-  font-size: clamp(36px, 11.7vw, 52px);
-  font-weight: 400;
-  line-height: 0.95;
-}
-
-.identity-title-script {
-  font-family: "Absolut Handwritten", "Outfit", sans-serif;
-  font-size: clamp(34px, 9.9vw, 50px);
-  font-weight: 400;
-  line-height: 0.95;
-}
-
 .identity-description {
   max-width: 360px;
   margin: 10px auto 14px;
@@ -943,11 +909,4 @@ button:disabled {
     font-size: 34px;
   }
 
-  .identity-title-main {
-    font-size: 52px;
-  }
-
-  .identity-title-script {
-    font-size: 50px;
-  }
 }

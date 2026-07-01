@@ -678,7 +678,6 @@ function renderResultCard(identity, imageUrl, variant) {
       <div class="result-card-inner">
         <div class="result-card-face result-card-front">
           ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
-          ${renderIdentityTitle(identity)}
         </div>
         <div class="result-card-face result-card-back">
           <h3>Previous Offences</h3>
@@ -697,16 +696,6 @@ function flipResultCard(card) {
   }
 
   card.classList.toggle("is-flipped");
-}
-
-function renderIdentityTitle(identity) {
-  const displayTitle = Array.isArray(identity.displayTitle) ? identity.displayTitle : [identity.title, ""];
-  return `
-    <h2 class="identity-title">
-      <span class="identity-title-main">${escapeHtml(formatIdentityMain(displayTitle[0] || ""))}</span>
-      <span class="identity-title-script">${escapeHtml(formatIdentityScript(displayTitle[1] || ""))}</span>
-    </h2>
-  `;
 }
 
 async function shareResult() {
