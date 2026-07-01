@@ -105,6 +105,7 @@ function calculateIdentity(answerHistory) {
     });
   });
 
+  const normalized = normalizeTraits(totals, answerHistory.length);
   const {
     impulse,
     restraint,
@@ -113,22 +114,24 @@ function calculateIdentity(answerHistory) {
     practicality,
     curiosity,
     influence
-  } = totals;
+  } = normalized;
 
   const balanceTraits = [curiosity, restraint, mischief, influence];
   const balanceAverage = balanceTraits.reduce((sum, value) => sum + value, 0) / balanceTraits.length;
   const balanceSpread = balanceTraits.reduce((sum, value) => sum + Math.abs(value - balanceAverage), 0);
-  const balanceScoreBasedOnEvenness = balanceAverage * 2.2 - balanceSpread * 0.8 + Math.min(...balanceTraits) * 0.6;
+  const balanceScoreBasedOnEvenness = balanceAverage * 1.85 - balanceSpread * 0.55 + Math.min(...balanceTraits) * 0.95;
 
   const scores = {
-    sinnerAmateur: restraint * 1.4 + practicality * 0.6 - impulse * 0.3,
-    ethicallyCreative: practicality * 1.1 + mischief * 1.0 + curiosity * 0.4,
-    chaosCurator: mischief * 1.3 + curiosity * 1.0 + impulse * 0.4,
-    wellnessOutlaw: curiosity * 1.2 + restraint * 0.8 + practicality * 0.4,
-    certifiedMenace: mischief * 1.4 + impulse * 1.2 + influence * 0.3,
-    professionalBadInfluence: influence * 1.4 + social * 1.1 + mischief * 0.5,
+    sinnerAmateur: restraint * 1.35 + practicality * 0.75 - impulse * 0.35 - mischief * 0.15,
+    ethicallyCreative: practicality * 1.15 + mischief * 1.05 + restraint * 0.2,
+    chaosCurator: mischief * 1.0 + curiosity * 1.05 + impulse * 0.15,
+    wellnessOutlaw: curiosity * 0.95 + restraint * 1.0 + practicality * 0.3,
+    certifiedMenace: mischief * 1.25 + impulse * 1.35 + curiosity * 0.1 - restraint * 0.15,
+    professionalBadInfluence: influence * 1.25 + social * 0.85 + mischief * 0.2,
     dailySinSaint: balanceScoreBasedOnEvenness
   };
+
+  applyArchetypeBoosts(scores, normalized);
 
   const tieBreakPriority = [
     "professionalBadInfluence",
@@ -147,6 +150,84 @@ function calculateIdentity(answerHistory) {
 
     return scores[key] > scores[winner] ? key : winner;
   }, null) || "sinnerAmateur";
+}
+
+function normalizeTraits(totals, answerCount) {
+  const ceilings = getTraitCeilings(answerCount);
+
+  return Object.keys(totals).reduce((normalized, trait) => {
+    const ceiling = ceilings[trait] || Math.max(answerCount * 2, 1);
+    normalized[trait] = totals[trait] / ceiling;
+    return normalized;
+  }, {});
+}
+
+function getTraitCeilings(answerCount) {
+  const ceilings = {
+    impulse: 0,
+    restraint: 0,
+    social: 0,
+    mischief: 0,
+    practicality: 0,
+    curiosity: 0,
+    influence: 0
+  };
+
+  if (!Array.isArray(globalThis.QUESTIONS)) {
+    Object.keys(ceilings).forEach((trait) => {
+      ceilings[trait] = Math.max(answerCount * 2, 1);
+    });
+    return ceilings;
+  }
+
+  globalThis.QUESTIONS.slice(0, answerCount).forEach((question) => {
+    Object.keys(ceilings).forEach((trait) => {
+      const possible = question.answers.map((answer) => Number(answer.traits[trait]) || 0);
+      ceilings[trait] += Math.max(...possible, 0);
+    });
+  });
+
+  Object.keys(ceilings).forEach((trait) => {
+    ceilings[trait] = Math.max(ceilings[trait], 1);
+  });
+
+  return ceilings;
+}
+
+function applyArchetypeBoosts(scores, traits) {
+  const rankedTraits = Object.entries(traits).sort((a, b) => b[1] - a[1]);
+  const strongestTrait = rankedTraits[0] ? rankedTraits[0][0] : "";
+  const secondTrait = rankedTraits[1] ? rankedTraits[1][0] : "";
+
+  if (strongestTrait === "influence" || secondTrait === "influence") {
+    scores.professionalBadInfluence += 0.12;
+  }
+
+  if (strongestTrait === "restraint" && traits.impulse < 0.42) {
+    scores.sinnerAmateur += 0.2;
+  }
+
+  if (traits.practicality >= 0.55 && traits.mischief >= 0.35) {
+    scores.ethicallyCreative += 0.18;
+  }
+
+  if (traits.curiosity >= 0.55 && traits.mischief >= 0.35) {
+    scores.chaosCurator += 0.18;
+  }
+
+  if (traits.curiosity >= 0.5 && traits.restraint >= 0.45) {
+    scores.wellnessOutlaw += 0.18;
+  }
+
+  if (traits.impulse >= 0.55 && traits.mischief >= 0.45) {
+    scores.certifiedMenace += 0.35;
+  }
+
+  const saintTraits = [traits.curiosity, traits.restraint, traits.mischief, traits.influence];
+  const saintSpread = Math.max(...saintTraits) - Math.min(...saintTraits);
+  if (saintSpread <= 0.28 && saintTraits.every((value) => value >= 0.2)) {
+    scores.dailySinSaint += 0.45;
+  }
 }
 
 globalThis.IDENTITIES = IDENTITIES;
