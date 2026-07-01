@@ -568,8 +568,8 @@ button:disabled {
 .result-card {
   position: relative;
   width: min(76vw, 280px);
-  max-height: 40vh;
-  aspect-ratio: 1 / 1.55;
+  max-height: 44vh;
+  aspect-ratio: 1 / 1.705;
   margin: 0 auto;
   overflow: visible;
   border-radius: 28px;
