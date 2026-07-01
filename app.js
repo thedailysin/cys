@@ -452,7 +452,8 @@ async function submitLead(event) {
 
   state.lead = { name, email, phone };
   state.identityKey = pickRandomIdentityKey();
-  const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
+  const result = getResultBundle(state.identityKey);
+  const identity = result.identity;
   state.resultVariant = pickResultVariant(identity);
 
   const payload = {
@@ -492,8 +493,8 @@ async function submitLeadPayload(payload) {
 }
 
 function renderResultTravel() {
-  const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
-  const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey] || "";
+  const result = getResultBundle(state.identityKey);
+  const imageUrl = result.imageUrl;
 
   setScreen(`
     <section class="screen result-travel-screen">
@@ -528,8 +529,9 @@ function renderResult(showConfetti) {
     state.identityKey = pickRandomIdentityKey();
   }
 
-  const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
-  const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey] || "";
+  const result = getResultBundle(state.identityKey);
+  const identity = result.identity;
+  const imageUrl = result.imageUrl;
   const variant = state.resultVariant || pickResultVariant(identity);
   state.resultVariant = variant;
   interactionLocked = false;
@@ -708,7 +710,8 @@ function renderIdentityTitle(identity) {
 }
 
 async function shareResult() {
-  const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
+  const result = getResultBundle(state.identityKey);
+  const identity = result.identity;
   const shareText = `Took a personality test.
 
 Turns out I'm a ${toTitleCase(identity.title)}.
@@ -758,7 +761,7 @@ ${CONFIG.SHARE_URL}`;
 
 async function createShareCardFile(identity) {
   try {
-    const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey];
+    const imageUrl = getResultBundle(state.identityKey).imageUrl;
     if (!imageUrl) {
       return null;
     }
@@ -890,12 +893,24 @@ function pickResultVariant(identity) {
 }
 
 function pickRandomIdentityKey() {
-  const identityKeys = Object.keys(IDENTITIES || {});
+  const identityKeys = Object.keys(IDENTITIES || {}).filter((key) => CONFIG.IDENTITY_IMAGES && CONFIG.IDENTITY_IMAGES[key]);
   if (identityKeys.length === 0) {
     return "sinnerAmateur";
   }
 
   return identityKeys[Math.floor(Math.random() * identityKeys.length)];
+}
+
+function getResultBundle(identityKey) {
+  const safeKey = IDENTITIES[identityKey] && CONFIG.IDENTITY_IMAGES[identityKey]
+    ? identityKey
+    : "sinnerAmateur";
+
+  return {
+    key: safeKey,
+    identity: IDENTITIES[safeKey] || IDENTITIES.sinnerAmateur,
+    imageUrl: CONFIG.IDENTITY_IMAGES[safeKey] || ""
+  };
 }
 
 function formatIdentityMain(value) {
