@@ -1,0 +1,1076 @@
+Yes — use a longer Codex prompt in **4 parts**. Paste all four together into Codex.
+
+## Codex Prompt — Part 1/3: Product, Visual Direction, Architecture
+
+You are a senior front-end engineer and interaction designer.
+
+Build a production-quality single-page web app for **The Daily Sin** called:
+
+**Confess Your Sins**
+
+It should feel inspired by Neal Agarwal’s **Trolley Problem** in interaction philosophy, not visual design.
+
+Borrow:
+
+* one decision at a time
+* minimal UI
+* playful moral-choice structure
+* quick retort after each choice
+* automatic next question
+* simple progress
+* continuous background muzak after start
+
+Do not copy Trolley Problem’s exact UI.
+
+The app will be embedded inside a Wix site using an iframe and hosted on GitHub Pages.
+
+Use only:
+
+* HTML
+* CSS
+* Vanilla JavaScript
+
+No React, Vue, Svelte, npm, build tools, Tailwind, Bootstrap, or external UI libraries.
+
+Final structure:
+
+```txt
+index.html
+style.css
+config.js
+questions.js
+identityEngine.js
+app.js
+```
+
+The app must be mobile-first. Desktop should be a centered larger version.
+
+Max content width: `480px`.
+
+No black/dark interface. Keep it light, airy, premium, editorial, and clean.
+
+Use the uploaded screenshots of The Daily Sin website as the main visual reference. The app must feel like an extension of the website, not a separate game.
+
+Use these design directions:
+
+* white background
+* black typography
+* primary green `#37C155`
+* large whitespace
+* clean rounded components
+* no heavy cards
+* no FAQ accordion styling
+* no dashboard-like UI
+* no gradients
+* no floating world for v1
+* no easter eggs for v1
+* no sound effects
+* no percentages
+* no score
+* no stats
+
+Typography:
+
+* Primary font: Outfit from Google Fonts
+* Secondary font: Absolut Handwritten Regular from config asset
+* Use handwritten sparingly only for emphasis
+
+Typography scale:
+
+* H1 desktop: 80px
+* H1 mobile: 36px
+* H2 desktop: 34px
+* H2 mobile: 28px
+* H3 desktop: 30px
+* H3 mobile: 22px
+* P1: 16px
+
+Colors:
+
+* White: `#FFFFFF`
+* Black: `#000000`
+* Green: `#37C155`
+
+Landing page copy is locked. Do not change it.
+
+Landing screen:
+
+```txt
+THE DAILY SIN
+
+CONFESSIONAL
+
+A NEVER-ENDING SERIES OF BAD DECISIONS.
+
+[ Confess Now ]
+```
+
+Typography treatment:
+
+* `THE DAILY SIN` in Outfit
+* `CONFESSIONAL` in Absolut Handwritten
+* Subheading in Outfit
+* Button says exactly `Confess Now`
+
+Music:
+
+* do not autoplay
+* music starts only after clicking `Confess Now`
+* music loops continuously after start
+* use the music URL from config
+
+Progress:
+
+* use a thin horizontal progress line
+* 2px height
+* black/very light grey track
+* green fill
+* no dots
+* no numbers
+* no percentages
+
+Interaction loop:
+
+```txt
+Question
+↓
+User chooses one of two answers
+↓
+Answers fade away
+↓
+Retort appears inside the same card/screen
+↓
+Retort stays for about 1.2 seconds
+↓
+Next question fades in automatically
+```
+
+There must NOT be a separate retort screen.
+
+Motion:
+
+* extremely minimal
+* fade
+* slight upward/downward translate around 16–20px
+* 200–300ms transitions
+* no bounce
+* no spring
+* no parallax
+* no confetti
+* no floating objects
+
+Lead form:
+After the final question and retort, show a lead form before the result.
+
+Lead form copy:
+
+```txt
+Before we make this official...
+```
+
+Fields:
+
+* Name required
+* Email required
+* Phone optional
+
+Button:
+
+```txt
+Reveal Result
+```
+
+On submit:
+
+* send to Google Apps Script endpoint from config
+* then reveal result
+* if submission fails, still allow the user to see their result, but log error in console and track event if possible
+
+Result screen:
+Use this structure:
+
+```txt
+You are a
+
+[IDENTITY NAME]
+
+[Identity description]
+```
+
+Do not write “You have officially been diagnosed as.”
+
+Share screen:
+Show identity card image and two buttons:
+
+```txt
+Forward to Someone Worse
+Play Again
+```
+
+Share text:
+
+```txt
+Took a personality test.
+
+Somehow got diagnosed as a [IDENTITY].
+
+Not arguing.
+
+https://thedailysin.com/confess
+```
+
+Replace `[IDENTITY]` dynamically.
+
+Use Web Share API if available. If unavailable, copy share text to clipboard.
+
+Analytics:
+Use PostHog. Load from config.
+Track only:
+
+* `game_started`
+* `question_answered`
+* `lead_submitted`
+* `identity_assigned`
+* `share_clicked`
+* `play_again`
+
+No session recording.
+No heatmaps.
+No rage clicks.
+
+Config must contain all URLs and keys. Do not hardcode assets elsewhere.
+
+Use this config data:
+
+```js
+const CONFIG = {
+  SHARE_URL: "https://thedailysin.com/confess",
+
+  LOGO_SVG: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/lOGO2.svg",
+
+  HANDWRITTEN_FONT: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/absolut-handwritten-regular.ttf",
+
+  MUSIC_URL: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/music.ogg",
+
+  GOOGLE_SCRIPT_ENDPOINT: "https://script.google.com/macros/s/AKfycbyxIW6DmZgmXx2TKQ2HCQZO9KUF536iN7hYOxvVuS03rc0KhfPKVOksFkFbdHL1feTaFQ/exec",
+
+  POSTHOG_KEY: "phc_D5G2ES6sYK8viZ99syLogRMTbf5mGnG5EbGWGDrFpK4H",
+  POSTHOG_HOST: "https://us.i.posthog.com",
+
+  IDENTITY_IMAGES: {
+    sinnerAmateur: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/Sinner%20Amatuer.avif",
+    ethicallyCreative: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/Ethically%20Creative.avif",
+    chaosCurator: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/CHAOS%20CURATOR.avif",
+    wellnessOutlaw: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/WELLNESS%20OUTLAW.avif",
+    certifiedMenace: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/CERTIFIED%20MENACE.avif",
+    professionalBadInfluence: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/PROFESSIONAL%20BAD%20INFLUENCE.avif",
+    dailySinSaint: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/THE%20DAILY%20SIN%20SAINT.avif"
+  }
+};
+```
+
+Important naming correction:
+The identity is **Ethically Creative**, not Ethical Cheater.
+
+---
+
+## Codex Prompt — Part 2/3: Questions, Answers, Retorts, Identity Engine
+
+Use exactly these 21 questions. The first 18 are normal questions. The last 3 are legendary/random questions, but for v1 include them in the full sequence after the first 18.
+
+Each answer must contain:
+
+* answer text
+* retort
+* trait scoring
+
+Hidden traits:
+
+* impulse
+* restraint
+* social
+* mischief
+* practicality
+* curiosity
+* influence
+
+Every answer should add 1–2 points to relevant traits.
+
+Questions:
+
+```js
+const QUESTIONS = [
+  {
+    id: "q1",
+    question: "You've ordered Zomato. Then you remember you're supposed to go to the gym.",
+    answers: [
+      {
+        text: "Cancel the gym",
+        retort: "The gym has survived worse.",
+        traits: { impulse: 2, practicality: 1 }
+      },
+      {
+        text: "Cancel the order",
+        retort: "The Zomato rider was already downstairs. History can't be undone.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q2",
+    question: "You have 30 minutes for lunch. The salad arrives in 5 minutes. The burger arrives in 10.",
+    answers: [
+      {
+        text: "Burger",
+        retort: "Good things take time. So do clogged arteries.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Salad",
+        retort: "You spent the burger's waiting time thinking about the burger.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q3",
+    question: "It's your bhua's birthday.",
+    answers: [
+      {
+        text: "React 👍 in the family WhatsApp",
+        retort: "Minimal effort. Maximum visibility.",
+        traits: { practicality: 2, mischief: 1 }
+      },
+      {
+        text: "Call her",
+        retort: "You signed up for forty-five minutes and three marriage questions.",
+        traits: { social: 2, restraint: 1 }
+      }
+    ]
+  },
+  {
+    id: "q4",
+    question: "Your annoying coworker is celebrating at an excellent restaurant.",
+    answers: [
+      {
+        text: "Go for the food",
+        retort: "You wished them exactly one happy birthday. That's enough.",
+        traits: { impulse: 1, social: 1, practicality: 1 }
+      },
+      {
+        text: "Skip it",
+        retort: "The pasta didn't deserve this.",
+        traits: { restraint: 1, practicality: 2 }
+      }
+    ]
+  },
+  {
+    id: "q5",
+    question: "It's midnight. You want a snack.",
+    answers: [
+      {
+        text: "Make Maggi",
+        retort: "Two minutes can change a person.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Eat an apple",
+        retort: "You looked inside the fridge twice before committing.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q6",
+    question: "Blinkit was supposed to be for toothpaste. Your cart is now ₹986.",
+    answers: [
+      {
+        text: "Checkout",
+        retort: "Blinkit knows you better than your therapist.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Close the app",
+        retort: "You closed it. You opened it again four minutes later.",
+        traits: { restraint: 1, practicality: 2 }
+      }
+    ]
+  },
+  {
+    id: "q7",
+    question: "The traffic light turns green. The car ahead hasn't moved.",
+    answers: [
+      {
+        text: "Honk",
+        retort: "One Mississippi. That's all they got.",
+        traits: { impulse: 1, mischief: 1 }
+      },
+      {
+        text: "Wait",
+        retort: "Your patience deserves tax benefits.",
+        traits: { restraint: 2, social: 1 }
+      }
+    ]
+  },
+  {
+    id: "q8",
+    question: "Nike drops the shoes you've wanted for months. They're just above budget.",
+    answers: [
+      {
+        text: "Buy them",
+        retort: "Budgets are surprisingly flexible documents.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Walk away",
+        retort: "You checked if they were still in stock before sleeping.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q9",
+    question: "You just had the best dessert of your life.",
+    answers: [
+      {
+        text: "Brush tomorrow",
+        retort: "Your dentist has entered the chat.",
+        traits: { impulse: 2, mischief: 1 }
+      },
+      {
+        text: "Brush now",
+        retort: "Mint and cake had an awkward handshake.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q10",
+    question: "The card machine asks if you'd like a receipt.",
+    answers: [
+      {
+        text: "Print it",
+        retort: "Future drawer clutter secured.",
+        traits: { practicality: 1, impulse: 1 }
+      },
+      {
+        text: "Skip it",
+        retort: "One tiny victory for the planet.",
+        traits: { restraint: 1, practicality: 2 }
+      }
+    ]
+  },
+  {
+    id: "q11",
+    question: "Someone offers you \"just one cigarette.\"",
+    answers: [
+      {
+        text: "Take it",
+        retort: "\"Just one\" has started many interesting stories.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Offer them a Daily Sin instead",
+        retort: "Unexpected plot twist. Nicely played.",
+        traits: { influence: 2, mischief: 1, curiosity: 1 }
+      }
+    ]
+  },
+  {
+    id: "q12",
+    question: "You're browsing Zomato even though you're not hungry.",
+    answers: [
+      {
+        text: "Add to cart",
+        retort: "Curiosity has a delivery fee.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Close the app",
+        retort: "The app took that personally.",
+        traits: { restraint: 2, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q13",
+    question: "Your mother says, \"Taste this.\" You're already full.",
+    answers: [
+      {
+        text: "Take a bite",
+        retort: "Resistance was always temporary.",
+        traits: { social: 2, impulse: 1 }
+      },
+      {
+        text: "Negotiate",
+        retort: "You've entered the diplomacy phase.",
+        traits: { practicality: 2, social: 1 }
+      }
+    ]
+  },
+  {
+    id: "q14",
+    question: "Someone is running for the lift as the doors close.",
+    answers: [
+      {
+        text: "Hold it",
+        retort: "Humanity survives another day.",
+        traits: { social: 2, restraint: 1 }
+      },
+      {
+        text: "Pretend not to see",
+        retort: "You suddenly became fascinated by the floor numbers.",
+        traits: { mischief: 1, practicality: 1 }
+      }
+    ]
+  },
+  {
+    id: "q15",
+    question: "You've finished the pack. One candy remains.",
+    answers: [
+      {
+        text: "Eat it",
+        retort: "You were never saving it for later.",
+        traits: { impulse: 2, curiosity: 1 }
+      },
+      {
+        text: "Save it",
+        retort: "You enjoy lying to your future self.",
+        traits: { restraint: 1, practicality: 2 }
+      }
+    ]
+  },
+  {
+    id: "q16",
+    question: "Someone asks, \"Is this actually healthy?\" while holding your Daily Sin pack.",
+    answers: [
+      {
+        text: "\"Open it.\"",
+        retort: "The reveal works every single time.",
+        traits: { influence: 2, curiosity: 1 }
+      },
+      {
+        text: "Explain Ayurveda",
+        retort: "You lost them at \"adaptogen\".",
+        traits: { curiosity: 2, social: 1 }
+      }
+    ]
+  },
+  {
+    id: "q17",
+    question: "Your friend mistakes the pack for cigarettes.",
+    answers: [
+      {
+        text: "Let them panic for a second",
+        retort: "Comedy needs timing.",
+        traits: { mischief: 2, influence: 1 }
+      },
+      {
+        text: "Correct them immediately",
+        retort: "You have admirable restraint. Slightly disappointing, though.",
+        traits: { restraint: 2, social: 1 }
+      }
+    ]
+  },
+  {
+    id: "q18",
+    question: "You finish your Daily Sin.",
+    answers: [
+      {
+        text: "Buy another",
+        retort: "Preparedness is an underrated virtue.",
+        traits: { practicality: 2, curiosity: 1 }
+      },
+      {
+        text: "Wait until you miss it",
+        retort: "Absence is excellent marketing.",
+        traits: { restraint: 1, curiosity: 2 }
+      }
+    ]
+  },
+  {
+    id: "q19",
+    question: "You accidentally liked someone's Instagram photo from 2019.",
+    answers: [
+      {
+        text: "Unlike immediately",
+        retort: "Too late. The notification has already escaped.",
+        traits: { impulse: 1, practicality: 1 }
+      },
+      {
+        text: "Commit to it",
+        retort: "Confidence is rarely this accidental.",
+        traits: { mischief: 2, influence: 1 }
+      }
+    ]
+  },
+  {
+    id: "q20",
+    question: "Your Uber driver misses the exit.",
+    answers: [
+      {
+        text: "Say nothing",
+        retort: "You're sightseeing now.",
+        traits: { restraint: 1, social: 1 }
+      },
+      {
+        text: "Politely mention it",
+        retort: "You both pretended the GPS wasn't judging.",
+        traits: { practicality: 2, social: 1 }
+      }
+    ]
+  },
+  {
+    id: "q21",
+    question: "Someone says, \"Try one bite.\"",
+    answers: [
+      {
+        text: "One bite",
+        retort: "One bite is a unit with no scientific definition.",
+        traits: { impulse: 2, social: 1 }
+      },
+      {
+        text: "Decline",
+        retort: "An impressive display of self-control. Everyone noticed.",
+        traits: { restraint: 2, social: 1 }
+      }
+    ]
+  }
+];
+```
+
+Identity engine:
+
+There are exactly 7 identities.
+
+Use trait totals to assign one identity.
+
+Identity list:
+
+1. `SINNER AMATEUR`
+2. `ETHICALLY CREATIVE`
+3. `CHAOS CURATOR`
+4. `WELLNESS OUTLAW`
+5. `CERTIFIED MENACE`
+6. `PROFESSIONAL BAD INFLUENCE`
+7. `THE DAILY SIN SAINT`
+
+Rules:
+
+* If restraint is highest and impulse is low → `SINNER AMATEUR`
+* If practicality + mischief is high → `ETHICALLY CREATIVE`
+* If mischief + curiosity is high → `CHAOS CURATOR`
+* If curiosity + restraint is high → `WELLNESS OUTLAW`
+* If mischief + impulse is high → `CERTIFIED MENACE`
+* If influence + social is high → `PROFESSIONAL BAD INFLUENCE`
+* If balanced scores across curiosity, restraint, mischief, and influence → `THE DAILY SIN SAINT`
+* Add deterministic tie-breakers so the same answers always produce the same identity.
+* Never show scores to user.
+
+Identity copy:
+
+```js
+const IDENTITIES = {
+  sinnerAmateur: {
+    title: "SINNER AMATEUR",
+    displayTitle: ["SINNER", "Amateur"],
+    description: "You keep flirting with bad decisions. Then apologising to them.",
+    knownFor: [
+      "Taking one small risk and narrating it.",
+      "Feeling guilty before anything happens.",
+      "Being dangerous only in theory."
+    ]
+  },
+
+  ethicallyCreative: {
+    title: "ETHICALLY CREATIVE",
+    displayTitle: ["ETHICALLY", "Creative"],
+    description: "You don't break rules. You simply negotiate with them.",
+    knownFor: [
+      "Finding loopholes with excellent posture.",
+      "Making bad ideas sound reasonable.",
+      "Using morality as a flexible material."
+    ]
+  },
+
+  chaosCurator: {
+    title: "CHAOS CURATOR",
+    displayTitle: ["CHAOS", "Curator"],
+    description: "You don't create problems. You arrange them beautifully.",
+    knownFor: [
+      "Making confusion look intentional.",
+      "Walking into calm rooms and improving the plot.",
+      "Turning minor inconvenience into atmosphere."
+    ]
+  },
+
+  wellnessOutlaw: {
+    title: "WELLNESS OUTLAW",
+    displayTitle: ["WELLNESS", "Outlaw"],
+    description: "You reject boring wellness and find health in suspicious places.",
+    knownFor: [
+      "Trusting ingredients, not beige packaging.",
+      "Making better choices look slightly illegal.",
+      "Treating self-care like a small rebellion."
+    ]
+  },
+
+  certifiedMenace: {
+    title: "CERTIFIED MENACE",
+    displayTitle: ["CERTIFIED", "Menace"],
+    description: "Entirely delightful. Slightly concerning.",
+    knownFor: [
+      "Being the reason warning labels exist.",
+      "Starting sentences with \"hear me out.\"",
+      "Creating situations no one can technically object to."
+    ]
+  },
+
+  professionalBadInfluence: {
+    title: "PROFESSIONAL BAD INFLUENCE",
+    displayTitle: ["PROFESSIONAL", "Bad Influence"],
+    description: "You don't force anyone. You just make questionable choices look irresistible.",
+    knownFor: [
+      "Being the second yes.",
+      "Turning plans into stories.",
+      "Making people say, \"Fine, but only because you're going.\""
+    ]
+  },
+
+  dailySinSaint: {
+    title: "THE DAILY SIN SAINT",
+    displayTitle: ["THE DAILY SIN", "Saint"],
+    description: "Fully enlightened. Entirely unqualified to give life advice.",
+    knownFor: [
+      "Balancing restraint and temptation suspiciously well.",
+      "Making peace with contradiction.",
+      "Choosing stories over purity."
+    ]
+  }
+};
+```
+
+---
+
+## Codex Prompt — Part 3/3: Build Details, UX States, Lead Capture, PostHog, Sharing
+
+Build all six files.
+
+Important: Do not output explanations. Output complete code files.
+
+File behavior:
+
+### `index.html`
+
+Must include:
+
+* meta viewport
+* title
+* Outfit Google Font
+* link to `style.css`
+* script imports in correct order:
+
+  * `config.js`
+  * `questions.js`
+  * `identityEngine.js`
+  * `app.js`
+* no inline CSS
+* no inline JS
+
+### `style.css`
+
+Must include:
+
+* `@font-face` for Absolut Handwritten using config is not possible in CSS if config is JS, so use the direct font URL in CSS
+* Outfit as default
+* CSS variables for colors and spacing
+* mobile-first styles
+* max width 480px
+* safe area padding
+* responsive desktop adjustments
+* visible focus states
+* button hover/active states
+* simple transition classes
+* styling for:
+
+  * landing screen
+  * quiz screen
+  * progress line
+  * question
+  * answer buttons
+  * retort
+  * lead form
+  * result screen
+  * identity image
+  * share screen
+
+The layout should feel very clean:
+
+* plenty of whitespace
+* rounded pill buttons
+* minimal borders
+* no heavy shadows
+* no complex backgrounds
+
+Button style:
+
+* primary button green background, black text
+* secondary button white background, black border, black text
+* full pill border-radius
+
+### `config.js`
+
+Must expose global `CONFIG`.
+
+Include exactly the asset URLs and keys from Part 1.
+
+### `questions.js`
+
+Must expose global `QUESTIONS`.
+
+Use exactly the questions, answers, retorts, and trait scoring from Part 2.
+
+### `identityEngine.js`
+
+Must expose:
+
+* global `IDENTITIES`
+* global function `calculateIdentity(answerHistory)`
+
+`answerHistory` contains selected answer trait objects.
+
+`calculateIdentity` should:
+
+* sum traits
+* calculate all 7 identity scores
+* return one identity key
+* be deterministic
+* handle empty or malformed data gracefully by returning `sinnerAmateur`
+
+Identity scoring suggestion:
+
+```js
+const scores = {
+  sinnerAmateur: restraint * 1.4 + practicality * 0.6 - impulse * 0.3,
+  ethicallyCreative: practicality * 1.1 + mischief * 1.0 + curiosity * 0.4,
+  chaosCurator: mischief * 1.3 + curiosity * 1.0 + impulse * 0.4,
+  wellnessOutlaw: curiosity * 1.2 + restraint * 0.8 + practicality * 0.4,
+  certifiedMenace: mischief * 1.4 + impulse * 1.2 + influence * 0.3,
+  professionalBadInfluence: influence * 1.4 + social * 1.1 + mischief * 0.5,
+  dailySinSaint: balanceScoreBasedOnEvenness
+};
+```
+
+Tie-break priority:
+
+1. professionalBadInfluence
+2. certifiedMenace
+3. ethicallyCreative
+4. chaosCurator
+5. wellnessOutlaw
+6. dailySinSaint
+7. sinnerAmateur
+
+### `app.js`
+
+Must handle:
+
+* app state
+* screen switching
+* start button
+* music start
+* question rendering
+* answer selection
+* retort rendering inside same quiz card
+* auto-advance
+* progress line
+* lead form validation
+* lead submission
+* identity calculation
+* result rendering
+* identity card image rendering
+* sharing
+* replay
+* PostHog setup and tracking
+
+Use this state structure:
+
+```js
+const state = {
+  currentQuestionIndex: 0,
+  answerHistory: [],
+  identityKey: null,
+  lead: {
+    name: "",
+    email: "",
+    phone: ""
+  },
+  startedAt: null
+};
+```
+
+Lead submission payload:
+
+```js
+{
+  timestamp: new Date().toISOString(),
+  name,
+  email,
+  phone,
+  identity: identity.title,
+  source: "Confessional",
+  userAgent: navigator.userAgent
+}
+```
+
+PostHog events:
+
+On start:
+
+```js
+posthog.capture("game_started")
+```
+
+On answer:
+
+```js
+posthog.capture("question_answered", {
+  questionId,
+  questionIndex,
+  answerText,
+  identityTraits: traits
+})
+```
+
+On lead submit:
+
+```js
+posthog.capture("lead_submitted", {
+  identity: identity.title
+})
+```
+
+On identity:
+
+```js
+posthog.capture("identity_assigned", {
+  identity: identity.title
+})
+```
+
+On share:
+
+```js
+posthog.capture("share_clicked", {
+  identity: identity.title
+})
+```
+
+On replay:
+
+```js
+posthog.capture("play_again")
+```
+
+PostHog initialization:
+Load using script snippet dynamically or use standard browser snippet. Keep simple. If PostHog fails, app must still work.
+
+Google Apps Script:
+Submit with `fetch(CONFIG.GOOGLE_SCRIPT_ENDPOINT, { method: "POST", body: JSON.stringify(payload) })`
+
+If CORS issues occur, use:
+
+* `mode: "no-cors"`
+* still proceed to result after submit
+
+Lead form:
+
+* validate name not empty
+* validate email contains `@`
+* phone optional
+* button text can become `Submitting...`
+* after submit success or failure, continue to result
+
+Result:
+Show:
+
+```txt
+You are a
+[IDENTITY]
+[description]
+```
+
+Identity title typography:
+Use two-line style:
+
+* first part Outfit uppercase
+* second part handwritten
+
+Example:
+
+```txt
+ETHICALLY
+Creative
+```
+
+Identity image:
+Use matching image from CONFIG.IDENTITY_IMAGES.
+
+Share screen:
+Show same image.
+Buttons:
+
+* Forward to Someone Worse
+* Play Again
+
+Share copy:
+
+```js
+`Took a personality test.
+
+Somehow got diagnosed as a ${identity.title}.
+
+Not arguing.
+
+${CONFIG.SHARE_URL}`
+```
+
+Use `navigator.share` if available:
+
+```js
+navigator.share({ text: shareText })
+```
+
+Fallback:
+copy to clipboard and temporarily change button text to `Copied`.
+
+Accessibility:
+
+* buttons must be keyboard accessible
+* answer buttons should have aria-labels
+* form labels can be visually hidden but accessible
+* focus states visible
+
+Performance:
+
+* do not preload all identity images immediately
+* lazy-load identity image when result is shown
+* music preload auto is okay
+* avoid large JS abstractions
+
+Final deliverable:
+Output all six files complete and ready to paste into GitHub.
+
+---
+
+## Codex Prompt — Part 4/4: Final Constraints
+
+Do not change any locked copy.
+Do not rename identities.
+Do not add extra features.
+Do not invent questions.
+Do not add commercial breaks, floating objects, easter eggs, stats, scores, percentages, or result meters.
+Prioritize a working app over clever code.
+If any external request fails, the app must still continue.
+Keep everything GitHub Pages compatible.
+Output files one by one, clearly labeled.
