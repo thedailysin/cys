@@ -9,6 +9,7 @@ const state = {
     email: "",
     phone: ""
   },
+  resultVariant: null,
   startedAt: null,
   isMuted: false
 };
@@ -203,7 +204,7 @@ function renderMuteButton() {
   const label = state.isMuted ? "Unmute music" : "Mute music";
   return `
     <button class="mute-button ${state.isMuted ? "is-off" : "is-on"}" type="button" id="muteButton" aria-label="${label}">
-      Music
+      ${state.isMuted ? "♪" : "♫"}
     </button>
   `;
 }
@@ -217,7 +218,7 @@ function toggleMute() {
 
   const muteButton = document.getElementById("muteButton");
   if (muteButton) {
-    muteButton.textContent = "Music";
+    muteButton.textContent = state.isMuted ? "♪" : "♫";
     muteButton.classList.toggle("is-off", state.isMuted);
     muteButton.classList.toggle("is-on", !state.isMuted);
     muteButton.setAttribute("aria-label", state.isMuted ? "Unmute music" : "Mute music");
@@ -245,6 +246,7 @@ function startGame() {
   state.currentQuestionIndex = 0;
   state.answerHistory = [];
   state.identityKey = null;
+  state.resultVariant = null;
   state.lead = { name: "", email: "", phone: "" };
   state.startedAt = new Date().toISOString();
 
@@ -451,6 +453,7 @@ async function submitLead(event) {
   state.lead = { name, email, phone };
   state.identityKey = calculateIdentity(state.answerHistory);
   const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
+  state.resultVariant = pickResultVariant(identity);
 
   const payload = {
     timestamp: new Date().toISOString(),
@@ -527,13 +530,16 @@ function renderResult(showConfetti) {
 
   const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
   const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey] || "";
+  const variant = state.resultVariant || pickResultVariant(identity);
+  state.resultVariant = variant;
+  interactionLocked = false;
 
   setScreen(`
     <section class="screen result-screen is-changing">
       <div class="result-panel">
         <p class="result-kicker">You are a</p>
-        ${renderResultCard(identity, imageUrl)}
-        <p class="identity-description">${escapeHtml(identity.description)}</p>
+        ${renderResultCard(identity, imageUrl, variant)}
+        <p class="identity-description">${escapeHtml(variant.description)}</p>
         <div class="result-swipe-actions">
           <span>← Do it again</span>
           <span>Forward to someone worse →</span>
@@ -544,6 +550,7 @@ function renderResult(showConfetti) {
   `, () => {
     const resultCard = document.querySelector(".result-card");
     setupSwipeCard(resultCard, {
+      onTap: () => flipResultCard(resultCard),
       onLeft: playAgain,
       onRight: shareResult
     });
@@ -567,6 +574,7 @@ function setupSwipeCard(card, options) {
   let startX = 0;
   let startY = 0;
   let currentX = 0;
+  let currentY = 0;
   let dragging = false;
 
   card.addEventListener("pointerdown", (event) => {
@@ -578,6 +586,7 @@ function setupSwipeCard(card, options) {
     startX = event.clientX;
     startY = event.clientY;
     currentX = 0;
+    currentY = 0;
     card.classList.add("is-dragging");
     card.setPointerCapture(event.pointerId);
   });
@@ -588,7 +597,7 @@ function setupSwipeCard(card, options) {
     }
 
     currentX = event.clientX - startX;
-    const currentY = event.clientY - startY;
+    currentY = event.clientY - startY;
     const rotate = currentX / 18;
     card.style.transform = `translate(${currentX}px, ${currentY * 0.12}px) rotate(${rotate}deg)`;
     card.dataset.swipe = currentX < 0 ? "left" : "right";
@@ -622,6 +631,10 @@ function setupSwipeCard(card, options) {
       return;
     }
 
+    if (Math.abs(currentX) < 8 && Math.abs(currentY) < 8 && typeof options.onTap === "function") {
+      options.onTap();
+    }
+
     card.style.transform = "";
     card.removeAttribute("data-swipe");
   });
@@ -638,15 +651,33 @@ function getCardColor(index) {
   return CARD_COLORS[index % CARD_COLORS.length];
 }
 
-function renderResultCard(identity, imageUrl) {
-  const textClass = shouldUseBlackCardText(state.identityKey) ? "has-black-text" : "has-white-text";
+function renderResultCard(identity, imageUrl, variant) {
+  const textClass = identity.cardText === "black" ? "has-black-text" : "has-white-text";
 
   return `
-    <div class="result-card ${textClass}">
-      ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
-      ${renderIdentityTitle(identity)}
+    <div class="result-card ${textClass}" style="--card-back: ${escapeAttribute(identity.cardBack)}">
+      <div class="result-card-inner">
+        <div class="result-card-face result-card-front">
+          ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
+          ${renderIdentityTitle(identity)}
+        </div>
+        <div class="result-card-face result-card-back">
+          <h3>Previous Offences</h3>
+          <ul>
+            ${variant.offences.map((offence) => `<li>${escapeHtml(offence)}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
     </div>
   `;
+}
+
+function flipResultCard(card) {
+  if (!card) {
+    return;
+  }
+
+  card.classList.toggle("is-flipped");
 }
 
 function renderIdentityTitle(identity) {
@@ -732,7 +763,7 @@ async function createShareCardFile(identity) {
     drawCoverImage(context, image, 160, 230, 760, 900);
 
     const displayTitle = Array.isArray(identity.displayTitle) ? identity.displayTitle : [identity.title, ""];
-    context.fillStyle = shouldUseBlackCardText(state.identityKey) ? "#000000" : "#ffffff";
+    context.fillStyle = identity.cardText === "black" ? "#000000" : "#ffffff";
     context.font = "400 88px Outfit, sans-serif";
     context.fillText(formatIdentityMain(displayTitle[0] || ""), canvas.width / 2, 990);
     context.font = "400 86px 'Absolut Handwritten', Outfit, sans-serif";
@@ -740,7 +771,8 @@ async function createShareCardFile(identity) {
 
     context.fillStyle = "#64645f";
     context.font = "400 42px Outfit, sans-serif";
-    wrapCanvasText(context, identity.description, canvas.width / 2, 1245, 840, 54);
+    const variant = state.resultVariant || pickResultVariant(identity);
+    wrapCanvasText(context, variant.description, canvas.width / 2, 1245, 840, 54);
 
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
     if (!blob) {
@@ -830,6 +862,16 @@ function playAgain() {
   startGame();
 }
 
+function pickResultVariant(identity) {
+  const descriptions = Array.isArray(identity.descriptions) ? identity.descriptions : [identity.description || ""];
+  const offenceSets = Array.isArray(identity.previousOffences) ? identity.previousOffences : [[]];
+
+  return {
+    description: descriptions[Math.floor(Math.random() * descriptions.length)] || "",
+    offences: offenceSets[Math.floor(Math.random() * offenceSets.length)] || []
+  };
+}
+
 function formatIdentityMain(value) {
   return toTitleCase(value);
 }
@@ -845,7 +887,8 @@ function toTitleCase(value) {
 }
 
 function shouldUseBlackCardText(identityKey) {
-  return ["professionalBadInfluence", "dailySinSaint", "sinnerAmateur"].includes(identityKey);
+  const identity = IDENTITIES[identityKey];
+  return identity ? identity.cardText === "black" : false;
 }
 
 function escapeHtml(value) {

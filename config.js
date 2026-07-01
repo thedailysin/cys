@@ -16,7 +16,7 @@ const CONFIG = {
     sinnerAmateur: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/Sinner%20Amatuer.avif",
     ethicallyCreative: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/Ethically%20Creative.avif",
     chaosCurator: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/CHAOS%20CURATOR.avif",
-    wellnessOutlaw: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/WELLNESS%20OUTLAW.avif",
+    socialLiability: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/WELLNESS%20OUTLAW.avif",
     certifiedMenace: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/CERTIFIED%20MENACE.avif",
     professionalBadInfluence: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/PROFESSIONAL%20BAD%20INFLUENCE.avif",
     dailySinSaint: "https://raw.githubusercontent.com/thedailysin/cys/refs/heads/main/THE%20DAILY%20SIN%20SAINT.avif"
