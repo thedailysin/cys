@@ -152,14 +152,10 @@ button:disabled {
   padding-block: 12px;
 }
 
-.icon-button {
-  width: 48px;
-  min-width: 48px;
-  min-height: 48px;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 24px;
-  line-height: 1;
+.result-actions-delayed {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: actionsFadeUp 360ms ease 1s forwards;
 }
 
 .button {
@@ -379,7 +375,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 14px 12px;
+  padding: 12px 10px;
   border: 1px solid var(--black);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.86);
@@ -388,6 +384,9 @@ button:disabled {
   text-align: center;
   line-height: 1.12;
   overflow-wrap: anywhere;
+  min-width: 0;
+  word-break: normal;
+  hyphens: auto;
   transition: transform 180ms ease, background-color 180ms ease;
 }
 
@@ -578,9 +577,9 @@ button:disabled {
 
 .result-card {
   position: relative;
-  width: min(100%, 320px);
-  max-height: 42vh;
-  aspect-ratio: 1 / 1.55;
+  width: min(100%, 330px);
+  max-height: 44vh;
+  aspect-ratio: 4 / 5;
   margin: 0 auto;
   overflow: visible;
   border-radius: 28px;
@@ -689,17 +688,17 @@ button:disabled {
 
 @keyframes cardTemptFlip {
   0%,
-  62%,
+  58%,
   100% {
     transform: rotateY(0deg);
   }
 
-  72% {
-    transform: rotateY(-8deg);
+  68% {
+    transform: rotateY(-5deg);
   }
 
   82% {
-    transform: rotateY(5deg);
+    transform: rotateY(0deg);
   }
 }
 
@@ -711,15 +710,6 @@ button:disabled {
 .mute-button.is-off {
   color: var(--black);
   border-color: var(--black);
-}
-
-.result-swipe-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.2;
 }
 
 .result-travel-screen {
@@ -751,13 +741,14 @@ button:disabled {
 
 .confetti span {
   position: absolute;
-  top: 40%;
+  top: 46%;
   left: 50%;
-  width: 7px;
-  height: 12px;
+  width: 8px;
+  height: 14px;
   background: var(--green);
   transform: rotate(var(--r));
-  animation: confettiPop 1200ms ease-out both;
+  animation: confettiPop 1300ms cubic-bezier(0.12, 0.72, 0.24, 1) both;
+  animation-delay: var(--d);
 }
 
 .confetti span:nth-child(3n) {
@@ -834,7 +825,7 @@ button:disabled {
 
   to {
     opacity: 0;
-    transform: translate(-50%, -230px) rotate(var(--r2)) scale(1);
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r2)) scale(1);
   }
 }
 
@@ -854,7 +845,7 @@ button:disabled {
 
   to {
     opacity: 0;
-    transform: translate(130px, -190px) rotate(var(--r2)) scale(1);
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r2)) scale(1);
   }
 }
 
@@ -866,7 +857,14 @@ button:disabled {
 
   to {
     opacity: 0;
-    transform: translate(-160px, -180px) rotate(var(--r2)) scale(1);
+    transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--r2)) scale(1);
+  }
+}
+
+@keyframes actionsFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -890,7 +888,7 @@ button:disabled {
 
   .result-card {
     width: min(100%, 340px);
-    max-height: 44vh;
+    max-height: 46vh;
   }
 
   .identity-description {

@@ -33,10 +33,10 @@ const ALL_QUESTIONS = [
   },
   {
     id: "q3",
-    question: "It's your bhua's birthday.",
+    question: "It's your aunt's birthday.",
     answers: [
       {
-        text: "React 👍 in the family WhatsApp",
+        text: "React 👍 in the family group",
         retort: "Minimal effort. Maximum visibility.",
         traits: { practicality: 2, mischief: 1 }
       },

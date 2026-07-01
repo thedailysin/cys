@@ -540,27 +540,34 @@ function renderResult(showConfetti) {
         <p class="result-kicker">You are a</p>
         ${renderResultCard(identity, imageUrl, variant)}
         <p class="identity-description">${escapeHtml(variant.description)}</p>
-        <div class="result-swipe-actions">
-          <span>← Do it again</span>
-          <span>Forward to someone worse →</span>
+        <div class="result-actions result-actions-delayed">
+          <button class="button button-primary" type="button" id="shareButton">Forward to Someone Worse</button>
+          <button class="button button-secondary" type="button" id="playAgainButton">Play Again</button>
         </div>
         ${showConfetti ? renderConfetti() : ""}
       </div>
     </section>
   `, () => {
     const resultCard = document.querySelector(".result-card");
-    setupSwipeCard(resultCard, {
-      onTap: () => flipResultCard(resultCard),
-      onLeft: playAgain,
-      onRight: shareResult
-    });
+    if (resultCard) {
+      resultCard.addEventListener("click", () => flipResultCard(resultCard));
+    }
+    document.getElementById("shareButton").addEventListener("click", shareResult);
+    document.getElementById("playAgainButton").addEventListener("click", playAgain);
   });
 }
 
 function renderConfetti() {
   return `
     <div class="confetti" aria-hidden="true">
-      ${Array.from({ length: 16 }, (_, index) => `<span style="--r: ${index * 24}deg; --r2: ${index * 58}deg"></span>`).join("")}
+      ${Array.from({ length: 34 }, (_, index) => {
+        const angle = (index / 34) * Math.PI * 2;
+        const distance = 110 + (index % 7) * 24;
+        const x = Math.round(Math.cos(angle) * distance);
+        const y = Math.round(Math.sin(angle) * distance - 80);
+        const delay = (index % 6) * 28;
+        return `<span style="--x: ${x}px; --y: ${y}px; --r: ${index * 23}deg; --r2: ${index * 71}deg; --d: ${delay}ms"></span>`;
+      }).join("")}
     </div>
   `;
 }
@@ -845,7 +852,7 @@ function wrapCanvasText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function showCopiedState(text) {
-  const target = document.getElementById("shareButton") || document.querySelector(".result-swipe-actions span:last-child");
+  const target = document.getElementById("shareButton");
   if (!target) {
     return;
   }
