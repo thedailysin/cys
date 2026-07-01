@@ -95,7 +95,7 @@ button:disabled {
 
 .result-screen {
   justify-content: flex-start;
-  padding-top: clamp(8px, 2vh, 22px);
+  padding-top: clamp(4px, 1.2vh, 14px);
   transform: translateY(0);
 }
 
@@ -142,14 +142,21 @@ button:disabled {
 
 .result-actions {
   display: flex;
-  gap: var(--space-sm);
+  gap: 8px;
   align-items: center;
 }
 
 .result-actions #shareButton {
   flex: 1;
-  min-height: 48px;
-  padding-block: 12px;
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
+}
+
+.result-actions #playAgainButton {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 14px;
 }
 
 .result-actions-delayed {
@@ -262,7 +269,7 @@ button:disabled {
   place-items: center;
   overflow: visible;
   perspective: 900px;
-  transform: translateY(-4vh);
+  transform: translateY(-5.5vh);
 }
 
 .quiz-content,
@@ -371,7 +378,8 @@ button:disabled {
 .direction-choice {
   width: 100%;
   min-height: 112px;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -380,19 +388,34 @@ button:disabled {
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.86);
   color: var(--black);
+  font-size: clamp(14px, 3.6vw, 18px);
   font-weight: 400;
   text-align: center;
   line-height: 1.12;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  overflow-wrap: break-word;
   min-width: 0;
   word-break: normal;
   hyphens: auto;
   transition: transform 180ms ease, background-color 180ms ease;
 }
 
-.direction-choice span:first-child,
-.direction-choice span:last-child {
-  flex: 0 0 auto;
+.direction-right {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.direction-arrow {
+  min-width: 16px;
+  justify-self: center;
+  line-height: 1;
+}
+
+.direction-text {
+  min-width: 0;
+  max-width: 100%;
+  display: block;
+  line-height: 1.14;
+  overflow-wrap: break-word;
 }
 
 .swipe-card[data-swipe="left"] .direction-left,
@@ -527,8 +550,8 @@ button:disabled {
 }
 
 .result-kicker {
-  margin: 0 0 18px;
-  font-size: 24px;
+  margin: 0 0 8px;
+  font-size: 20px;
   font-weight: 400;
   text-align: center;
 }
@@ -569,17 +592,18 @@ button:disabled {
 
 .identity-description {
   max-width: 360px;
-  margin: 16px auto 28px;
+  margin: 10px auto 14px;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 16px;
+  line-height: 1.28;
   text-align: center;
 }
 
 .result-card {
   position: relative;
-  width: min(100%, 330px);
-  max-height: 44vh;
-  aspect-ratio: 4 / 5;
+  width: min(76vw, 280px);
+  max-height: 40vh;
+  aspect-ratio: 1 / 1.55;
   margin: 0 auto;
   overflow: visible;
   border-radius: 28px;
@@ -595,7 +619,8 @@ button:disabled {
   height: 100%;
   border-radius: 28px;
   transform-style: preserve-3d;
-  animation: cardTemptFlip 2800ms ease-in-out 900ms infinite;
+  transform-origin: center center;
+  animation: cardTemptFlip 2800ms cubic-bezier(0.22, 1, 0.36, 1) 900ms infinite;
   transition: transform 560ms ease;
 }
 
@@ -688,16 +713,16 @@ button:disabled {
 
 @keyframes cardTemptFlip {
   0%,
-  58%,
+  62%,
   100% {
     transform: rotateY(0deg);
   }
 
-  68% {
-    transform: rotateY(-5deg);
+  74% {
+    transform: rotateY(4deg);
   }
 
-  82% {
+  88% {
     transform: rotateY(0deg);
   }
 }
@@ -743,20 +768,24 @@ button:disabled {
   position: absolute;
   top: 46%;
   left: 50%;
-  width: 8px;
-  height: 14px;
-  background: var(--green);
+  width: var(--w);
+  height: var(--h);
+  background: var(--c);
   transform: rotate(var(--r));
-  animation: confettiPop 1300ms cubic-bezier(0.12, 0.72, 0.24, 1) both;
+  animation: confettiPop 1500ms cubic-bezier(0.12, 0.72, 0.24, 1) both;
   animation-delay: var(--d);
 }
 
-.confetti span:nth-child(3n) {
-  background: #d8ff64;
+.confetti-piece-1 {
+  border-radius: 999px;
 }
 
-.confetti span:nth-child(3n + 1) {
-  background: #19c98b;
+.confetti-piece-2 {
+  border-radius: 999px 999px 0 999px;
+}
+
+.confetti-piece-3 {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
 @keyframes cardRise {
@@ -887,12 +916,12 @@ button:disabled {
   }
 
   .result-card {
-    width: min(100%, 340px);
-    max-height: 46vh;
+    width: min(100%, 310px);
+    max-height: 44vh;
   }
 
   .identity-description {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .question {

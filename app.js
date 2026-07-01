@@ -268,12 +268,12 @@ function renderQuiz() {
             <h2 class="question">${escapeHtml(question.question)}</h2>
             <div class="direction-row">
               <button class="direction-choice direction-left" type="button" data-answer-index="0">
-                <span>←</span>
-                <span>${escapeHtml(question.answers[0].text)}</span>
+                <span class="direction-arrow">←</span>
+                <span class="direction-text">${escapeHtml(question.answers[0].text)}</span>
               </button>
               <button class="direction-choice direction-right" type="button" data-answer-index="1">
-                <span>${escapeHtml(question.answers[1].text)}</span>
-                <span>→</span>
+                <span class="direction-text">${escapeHtml(question.answers[1].text)}</span>
+                <span class="direction-arrow">→</span>
               </button>
             </div>
             <p class="swipe-hint">Swipe toward your answer</p>
@@ -558,15 +558,20 @@ function renderResult(showConfetti) {
 }
 
 function renderConfetti() {
+  const colors = ["#37C155", "#D8FF64", "#19C98B", "#F3C84A", "#CC6780", "#CE3728", "#005E69"];
+
   return `
     <div class="confetti" aria-hidden="true">
-      ${Array.from({ length: 34 }, (_, index) => {
-        const angle = (index / 34) * Math.PI * 2;
-        const distance = 110 + (index % 7) * 24;
+      ${Array.from({ length: 64 }, (_, index) => {
+        const angle = (index / 64) * Math.PI * 2;
+        const distance = 105 + (index % 9) * 20;
         const x = Math.round(Math.cos(angle) * distance);
-        const y = Math.round(Math.sin(angle) * distance - 80);
-        const delay = (index % 6) * 28;
-        return `<span style="--x: ${x}px; --y: ${y}px; --r: ${index * 23}deg; --r2: ${index * 71}deg; --d: ${delay}ms"></span>`;
+        const y = Math.round(Math.sin(angle) * distance - 96 - (index % 5) * 10);
+        const delay = (index % 10) * 18;
+        const width = 6 + (index % 3) * 3;
+        const height = 8 + (index % 4) * 4;
+        const color = colors[index % colors.length];
+        return `<span class="confetti-piece-${index % 4}" style="--x: ${x}px; --y: ${y}px; --r: ${index * 23}deg; --r2: ${index * 73}deg; --d: ${delay}ms; --w: ${width}px; --h: ${height}px; --c: ${color}"></span>`;
       }).join("")}
     </div>
   `;
