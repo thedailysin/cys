@@ -15,12 +15,22 @@ const state = {
 
 let audio = null;
 let posthogReady = false;
+let posthogFailed = false;
+const pendingPostHogEvents = [];
 const RETORT_DURATION = 2160;
 
 function track(eventName, properties) {
   try {
-    if (window.posthog && typeof window.posthog.capture === "function") {
+    if (posthogReady && window.posthog && typeof window.posthog.capture === "function") {
       window.posthog.capture(eventName, properties || {});
+      return;
+    }
+
+    if (!posthogFailed) {
+      pendingPostHogEvents.push({
+        eventName,
+        properties: properties || {}
+      });
     }
   } catch (error) {
     console.error("PostHog tracking failed", error);
@@ -33,36 +43,114 @@ function initPostHog() {
   }
 
   try {
-    window.posthog = window.posthog || {
-      _i: [],
-      init: function (key, config) {
-        this._i.push([key, config]);
-      },
-      capture: function () {}
-    };
-
-    const script = document.createElement("script");
-    script.async = true;
-    script.src = `${CONFIG.POSTHOG_HOST}/static/array.js`;
-    script.onload = () => {
-      try {
-        window.posthog.init(CONFIG.POSTHOG_KEY, {
-          api_host: CONFIG.POSTHOG_HOST,
-          autocapture: false,
-          capture_pageview: false,
-          disable_session_recording: true,
-          disable_surveys: true,
-          advanced_disable_decide: true
-        });
+    installPostHogSnippet();
+    window.posthog.init(CONFIG.POSTHOG_KEY, {
+      api_host: CONFIG.POSTHOG_HOST,
+      defaults: "2026-05-30",
+      autocapture: false,
+      capture_pageview: false,
+      disable_session_recording: true,
+      disable_surveys: true,
+      advanced_disable_decide: true,
+      loaded: () => {
         posthogReady = true;
-      } catch (error) {
-        console.error("PostHog initialization failed", error);
+        flushPostHogEvents();
       }
-    };
-    script.onerror = () => console.error("PostHog script failed to load");
-    document.head.appendChild(script);
+    });
+
+    window.setTimeout(() => {
+      if (!posthogReady) {
+        console.error("PostHog did not finish loading");
+      }
+    }, 6000);
   } catch (error) {
+    posthogFailed = true;
     console.error("PostHog setup failed", error);
+  }
+}
+
+function installPostHogSnippet() {
+  if (window.posthog && window.posthog.__SV) {
+    return;
+  }
+
+  (function (documentRef, posthogRef) {
+    let methodIndex;
+    let methodNames;
+    let script;
+    let firstScript;
+
+    if (posthogRef.__SV) {
+      return;
+    }
+
+    window.posthog = posthogRef;
+    posthogRef._i = [];
+    posthogRef.init = function (key, config, name) {
+      function addStub(target, methodName) {
+        const parts = methodName.split(".");
+        if (parts.length === 2) {
+          target = target[parts[0]];
+          methodName = parts[1];
+        }
+        target[methodName] = function () {
+          target.push([methodName].concat(Array.prototype.slice.call(arguments, 0)));
+        };
+      }
+
+      script = documentRef.createElement("script");
+      script.type = "text/javascript";
+      script.crossOrigin = "anonymous";
+      script.async = true;
+      script.src = `${config.api_host.replace(".i.posthog.com", "-assets.i.posthog.com")}/static/array.js`;
+      firstScript = documentRef.getElementsByTagName("script")[0];
+      firstScript.parentNode.insertBefore(script, firstScript);
+
+      let target = posthogRef;
+      if (name !== undefined) {
+        target = posthogRef[name] = [];
+      } else {
+        name = "posthog";
+      }
+
+      target.people = target.people || [];
+      target.toString = function (isPeople) {
+        let value = "posthog";
+        if (name !== "posthog") {
+          value += `.${name}`;
+        }
+        if (!isPeople) {
+          value += " (stub)";
+        }
+        return value;
+      };
+      target.people.toString = function () {
+        return `${target.toString(1)}.people (stub)`;
+      };
+
+      methodNames = "init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagResult isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" ");
+      for (methodIndex = 0; methodIndex < methodNames.length; methodIndex += 1) {
+        addStub(target, methodNames[methodIndex]);
+      }
+
+      posthogRef._i.push([key, config, name]);
+    };
+    posthogRef.__SV = 1;
+  })(document, window.posthog || []);
+}
+
+function flushPostHogEvents() {
+  try {
+    while (pendingPostHogEvents.length > 0) {
+      const event = pendingPostHogEvents.shift();
+      window.posthog.capture(event.eventName, event.properties);
+    }
+
+    window.posthog.capture("posthog_ready", {
+      source: "Confessional"
+    });
+  } catch (error) {
+    console.error("PostHog flush failed", error);
   }
 }
 
@@ -162,11 +250,11 @@ function startGame() {
 
 function renderQuiz() {
   const question = QUESTIONS[state.currentQuestionIndex];
+  const progress = (state.currentQuestionIndex / QUESTIONS.length) * 100;
 
   setScreen(`
     <section class="screen is-changing">
       <div class="quiz-shell">
-        ${renderProgress()}
         <div class="quiz-content" id="quizContent">
           <h2 class="question">${escapeHtml(question.question)}</h2>
           <div class="answers">
@@ -180,6 +268,7 @@ function renderQuiz() {
             `).join("")}
           </div>
         </div>
+        ${renderProgress(progress)}
       </div>
     </section>
   `, () => {
@@ -189,17 +278,10 @@ function renderQuiz() {
   });
 }
 
-function renderProgress() {
+function renderProgress(progress) {
   return `
-    <div class="story-progress" aria-hidden="true">
-      ${QUESTIONS.map((question, index) => {
-        const className = index < state.currentQuestionIndex
-          ? "story-segment is-complete"
-          : index === state.currentQuestionIndex
-            ? "story-segment is-current"
-            : "story-segment";
-        return `<span class="${className}"></span>`;
-      }).join("")}
+    <div class="progress" aria-hidden="true">
+      <div class="progress-fill" style="width: ${progress}%"></div>
     </div>
   `;
 }

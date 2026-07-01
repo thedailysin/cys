@@ -77,13 +77,13 @@ button:disabled {
   justify-content: center;
   gap: var(--space-lg);
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(-20%);
   transition: opacity 240ms ease, transform 240ms ease;
 }
 
 .screen.is-changing {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(calc(-20% + 18px));
 }
 
 .brand-lockup {
@@ -160,10 +160,15 @@ button:disabled {
 }
 
 .progress {
-  width: 100%;
+  position: fixed;
+  left: 50%;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 5;
+  width: min(calc(100% - 136px), 340px);
   height: 2px;
   overflow: hidden;
   background: var(--line);
+  transform: translateX(-50%);
 }
 
 .progress-fill {
@@ -177,39 +182,6 @@ button:disabled {
   width: 100%;
   display: grid;
   gap: var(--space-xl);
-}
-
-.story-progress {
-  position: fixed;
-  top: max(12px, env(safe-area-inset-top));
-  left: 50%;
-  z-index: 5;
-  width: min(calc(100% - 32px), var(--max-width));
-  display: grid;
-  grid-template-columns: repeat(21, 1fr);
-  gap: 3px;
-  transform: translateX(-50%);
-}
-
-.story-segment {
-  height: 3px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--line);
-}
-
-.story-segment::before {
-  content: "";
-  width: 0;
-  height: 100%;
-  display: block;
-  border-radius: inherit;
-  background: var(--green);
-}
-
-.story-segment.is-complete::before,
-.story-segment.is-current::before {
-  width: 100%;
 }
 
 .quiz-content {
@@ -342,14 +314,14 @@ button:disabled {
 }
 
 .identity-title-main {
-  font-size: clamp(40px, 13vw, 58px);
+  font-size: clamp(36px, 11.7vw, 52px);
   font-weight: 400;
   line-height: 0.95;
 }
 
 .identity-title-script {
   font-family: "Absolut Handwritten", "Outfit", sans-serif;
-  font-size: clamp(38px, 11vw, 56px);
+  font-size: clamp(34px, 9.9vw, 50px);
   font-weight: 400;
   line-height: 0.95;
 }
@@ -380,7 +352,7 @@ button:disabled {
 
 .mute-button {
   position: fixed;
-  top: max(28px, calc(env(safe-area-inset-top) + 18px));
+  bottom: max(12px, env(safe-area-inset-bottom));
   right: max(16px, env(safe-area-inset-right));
   z-index: 10;
   min-height: 34px;
@@ -413,10 +385,10 @@ button:disabled {
   }
 
   .identity-title-main {
-    font-size: 58px;
+    font-size: 52px;
   }
 
   .identity-title-script {
-    font-size: 56px;
+    font-size: 50px;
   }
 }
