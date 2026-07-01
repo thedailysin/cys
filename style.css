@@ -63,6 +63,7 @@ button:disabled {
 }
 
 .app {
+  position: relative;
   width: min(100%, var(--max-width));
   min-height: 100vh;
   margin: 0 auto;
@@ -87,31 +88,32 @@ button:disabled {
 
 .brand-lockup {
   display: grid;
-  gap: var(--space-md);
+  gap: 18px;
   text-align: center;
+  justify-items: center;
 }
 
-.brand {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+.landing-logo {
+  width: 120px;
+  max-width: 44vw;
+  height: auto;
+  display: block;
 }
 
 .landing-title {
   margin: 0;
-  font-family: "Absolut Handwritten", "Outfit", sans-serif;
+  font-family: "Outfit", system-ui, sans-serif;
   font-size: 36px;
   font-weight: 400;
-  line-height: 0.95;
+  line-height: 1;
 }
 
 .landing-subtitle {
   max-width: 300px;
   margin: 0 auto;
   font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 400;
+  line-height: 1.25;
 }
 
 .button-row {
@@ -131,6 +133,11 @@ button:disabled {
   font-weight: 700;
   text-align: center;
   transition: transform 200ms ease, background-color 200ms ease, border-color 200ms ease;
+}
+
+.button-caps {
+  font-weight: 400;
+  text-transform: uppercase;
 }
 
 .button:hover {
@@ -172,6 +179,39 @@ button:disabled {
   gap: var(--space-xl);
 }
 
+.story-progress {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 5;
+  width: min(calc(100% - 32px), var(--max-width));
+  display: grid;
+  grid-template-columns: repeat(21, 1fr);
+  gap: 3px;
+  transform: translateX(-50%);
+}
+
+.story-segment {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.story-segment::before {
+  content: "";
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: var(--green);
+}
+
+.story-segment.is-complete::before,
+.story-segment.is-current::before {
+  width: 100%;
+}
+
 .quiz-content {
   min-height: 360px;
   display: flex;
@@ -191,8 +231,8 @@ button:disabled {
 .question {
   margin: 0;
   font-size: 28px;
-  font-weight: 700;
-  line-height: 1.04;
+  font-weight: 400;
+  line-height: 1.12;
   text-align: center;
 }
 
@@ -238,9 +278,15 @@ button:disabled {
 .screen-title {
   margin: 0;
   font-size: 28px;
-  font-weight: 700;
-  line-height: 1.05;
+  font-weight: 400;
+  line-height: 1.1;
   text-align: center;
+}
+
+.handwritten {
+  font-family: "Absolut Handwritten", "Outfit", sans-serif;
+  font-size: 1.25em;
+  line-height: 0.9;
 }
 
 .field {
@@ -277,45 +323,75 @@ button:disabled {
 }
 
 .result-kicker {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  margin: 0 0 18px;
+  font-size: 24px;
+  font-weight: 700;
   text-align: center;
 }
 
 .identity-title {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 34px;
   display: grid;
-  gap: 2px;
+  gap: 4px;
   margin: 0;
   text-align: center;
+  color: var(--white);
 }
 
 .identity-title-main {
-  font-size: 34px;
-  font-weight: 800;
+  font-size: clamp(40px, 13vw, 58px);
+  font-weight: 400;
   line-height: 0.95;
 }
 
 .identity-title-script {
   font-family: "Absolut Handwritten", "Outfit", sans-serif;
-  font-size: 44px;
+  font-size: clamp(38px, 11vw, 56px);
   font-weight: 400;
   line-height: 0.95;
 }
 
 .identity-description {
   max-width: 360px;
-  margin: 0 auto;
+  margin: 20px auto 60px;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 20px;
   text-align: center;
 }
 
-.identity-image {
-  width: min(100%, 320px);
+.result-card {
+  position: relative;
+  width: min(100%, 360px);
+  aspect-ratio: 1 / 1.55;
   margin: 0 auto;
+  overflow: hidden;
+  background: #111111;
+}
+
+.identity-image {
+  width: 100%;
+  height: 100%;
   display: block;
-  border-radius: 18px;
+  object-fit: cover;
+}
+
+.mute-button {
+  position: fixed;
+  top: max(28px, calc(env(safe-area-inset-top) + 18px));
+  right: max(16px, env(safe-area-inset-right));
+  z-index: 10;
+  min-height: 34px;
+  padding: 8px 12px;
+  border: 1px solid var(--black);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--black);
+  font-size: 12px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
 }
 
 @media (min-width: 720px) {
@@ -325,7 +401,7 @@ button:disabled {
   }
 
   .landing-title {
-    font-size: 80px;
+    font-size: 60px;
   }
 
   .screen-title {
@@ -337,7 +413,7 @@ button:disabled {
   }
 
   .identity-title-main {
-    font-size: 44px;
+    font-size: 58px;
   }
 
   .identity-title-script {

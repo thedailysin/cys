@@ -9,11 +9,13 @@ const state = {
     email: "",
     phone: ""
   },
-  startedAt: null
+  startedAt: null,
+  isMuted: false
 };
 
 let audio = null;
 let posthogReady = false;
+const RETORT_DURATION = 2160;
 
 function track(eventName, properties) {
   try {
@@ -73,6 +75,8 @@ function startMusic() {
       audio.volume = 0.42;
     }
 
+    audio.muted = state.isMuted;
+
     const playAttempt = audio.play();
     if (playAttempt && typeof playAttempt.catch === "function") {
       playAttempt.catch((error) => console.error("Music failed to start", error));
@@ -83,7 +87,12 @@ function startMusic() {
 }
 
 function setScreen(html, afterRender) {
-  app.innerHTML = html;
+  app.innerHTML = `${renderMuteButton()}${html}`;
+  const muteButton = document.getElementById("muteButton");
+  if (muteButton) {
+    muteButton.addEventListener("click", toggleMute);
+  }
+
   window.requestAnimationFrame(() => {
     const screen = app.querySelector(".screen");
     if (screen) {
@@ -95,16 +104,43 @@ function setScreen(html, afterRender) {
   });
 }
 
+function renderMuteButton() {
+  if (!state.startedAt) {
+    return "";
+  }
+
+  const label = state.isMuted ? "Unmute music" : "Mute music";
+  return `
+    <button class="mute-button" type="button" id="muteButton" aria-label="${label}">
+      ${state.isMuted ? "Sound Off" : "Sound On"}
+    </button>
+  `;
+}
+
+function toggleMute() {
+  state.isMuted = !state.isMuted;
+
+  if (audio) {
+    audio.muted = state.isMuted;
+  }
+
+  const muteButton = document.getElementById("muteButton");
+  if (muteButton) {
+    muteButton.textContent = state.isMuted ? "Sound Off" : "Sound On";
+    muteButton.setAttribute("aria-label", state.isMuted ? "Unmute music" : "Mute music");
+  }
+}
+
 function renderLanding() {
   setScreen(`
     <section class="screen is-changing">
       <div class="brand-lockup">
-        <p class="brand">THE DAILY SIN</p>
-        <h1 class="landing-title">CONFESSIONAL</h1>
-        <p class="landing-subtitle">A NEVER-ENDING SERIES OF BAD DECISIONS.</p>
+        <img class="landing-logo" src="${escapeAttribute(CONFIG.LOGO_SVG)}" alt="The Daily Sin">
+        <h1 class="landing-title">Confess Your Sins</h1>
+        <p class="landing-subtitle">A Never ending series<br>of Bad Decisions</p>
       </div>
       <div class="button-row">
-        <button class="button button-primary" type="button" id="startButton">Confess Now</button>
+        <button class="button button-primary button-caps" type="button" id="startButton">Confess Now</button>
       </div>
     </section>
   `, () => {
@@ -126,14 +162,11 @@ function startGame() {
 
 function renderQuiz() {
   const question = QUESTIONS[state.currentQuestionIndex];
-  const progress = (state.currentQuestionIndex / QUESTIONS.length) * 100;
 
   setScreen(`
     <section class="screen is-changing">
       <div class="quiz-shell">
-        <div class="progress" aria-hidden="true">
-          <div class="progress-fill" style="width: ${progress}%"></div>
-        </div>
+        ${renderProgress()}
         <div class="quiz-content" id="quizContent">
           <h2 class="question">${escapeHtml(question.question)}</h2>
           <div class="answers">
@@ -154,6 +187,21 @@ function renderQuiz() {
       button.addEventListener("click", () => selectAnswer(Number(button.dataset.answerIndex)));
     });
   });
+}
+
+function renderProgress() {
+  return `
+    <div class="story-progress" aria-hidden="true">
+      ${QUESTIONS.map((question, index) => {
+        const className = index < state.currentQuestionIndex
+          ? "story-segment is-complete"
+          : index === state.currentQuestionIndex
+            ? "story-segment is-current"
+            : "story-segment";
+        return `<span class="${className}"></span>`;
+      }).join("")}
+    </div>
+  `;
 }
 
 function selectAnswer(answerIndex) {
@@ -189,14 +237,14 @@ function selectAnswer(answerIndex) {
     }
 
     renderQuiz();
-  }, 1440);
+  }, RETORT_DURATION);
 }
 
 function renderLeadForm() {
   setScreen(`
     <section class="screen is-changing">
       <form class="lead-form" id="leadForm" novalidate>
-        <h2 class="screen-title">Before we make this official...</h2>
+        <h2 class="screen-title"><span>Before we make this</span> <span class="handwritten">Official</span></h2>
 
         <label class="field">
           <span class="visually-hidden">Name</span>
@@ -210,7 +258,7 @@ function renderLeadForm() {
 
         <label class="field">
           <span class="visually-hidden">Phone</span>
-          <input id="leadPhone" name="phone" type="tel" autocomplete="tel" placeholder="Phone">
+          <input id="leadPhone" name="phone" type="tel" autocomplete="tel" placeholder="Phone (optional)">
         </label>
 
         <p class="form-error" id="formError" role="alert"></p>
@@ -243,7 +291,7 @@ async function submitLead(event) {
 
   error.textContent = "";
   button.disabled = true;
-  button.textContent = "Submitting...";
+  button.textContent = "Thinking...";
 
   state.lead = { name, email, phone };
   state.identityKey = calculateIdentity(state.answerHistory);
@@ -291,9 +339,8 @@ function renderResult() {
     <section class="screen is-changing">
       <div class="result-panel">
         <p class="result-kicker">You are a</p>
-        ${renderIdentityTitle(identity)}
+        ${renderResultCard(identity, imageUrl)}
         <p class="identity-description">${escapeHtml(identity.description)}</p>
-        ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
         <div class="button-row">
           <button class="button button-primary" type="button" id="shareButton">Forward to Someone Worse</button>
           <button class="button button-secondary" type="button" id="playAgainButton">Play Again</button>
@@ -306,12 +353,21 @@ function renderResult() {
   });
 }
 
+function renderResultCard(identity, imageUrl) {
+  return `
+    <div class="result-card">
+      ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="${escapeAttribute(identity.title)}" loading="lazy">` : ""}
+      ${renderIdentityTitle(identity)}
+    </div>
+  `;
+}
+
 function renderIdentityTitle(identity) {
   const displayTitle = Array.isArray(identity.displayTitle) ? identity.displayTitle : [identity.title, ""];
   return `
     <h2 class="identity-title">
-      <span class="identity-title-main">${escapeHtml(displayTitle[0] || "")}</span>
-      <span class="identity-title-script">${escapeHtml(displayTitle[1] || "")}</span>
+      <span class="identity-title-main">${escapeHtml(formatIdentityMain(displayTitle[0] || ""))}</span>
+      <span class="identity-title-script">${escapeHtml(formatIdentityScript(displayTitle[1] || ""))}</span>
     </h2>
   `;
 }
@@ -320,9 +376,9 @@ async function shareResult() {
   const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
   const shareText = `Took a personality test.
 
-Somehow got diagnosed as a ${identity.title}.
+Turns out I'm a ${toTitleCase(identity.title)}.
 
-Not arguing.
+Not Arguing
 
 ${CONFIG.SHARE_URL}`;
 
@@ -331,7 +387,16 @@ ${CONFIG.SHARE_URL}`;
   });
 
   try {
+    const shareFile = await createShareCardFile(identity);
     if (navigator.share) {
+      if (shareFile && navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+        await navigator.share({
+          text: shareText,
+          files: [shareFile]
+        });
+        return;
+      }
+
       await navigator.share({ text: shareText });
       return;
     }
@@ -342,6 +407,92 @@ ${CONFIG.SHARE_URL}`;
     console.error("Sharing failed", error);
     showCopiedState("Copy failed");
   }
+}
+
+async function createShareCardFile(identity) {
+  try {
+    const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey];
+    if (!imageUrl) {
+      return null;
+    }
+
+    const image = await loadImage(imageUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = 1080;
+    canvas.height = 1600;
+
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.fillStyle = "#000000";
+    context.font = "700 48px Outfit, sans-serif";
+    context.textAlign = "center";
+    context.fillText("You are a", canvas.width / 2, 155);
+
+    drawCoverImage(context, image, 160, 230, 760, 900);
+
+    const displayTitle = Array.isArray(identity.displayTitle) ? identity.displayTitle : [identity.title, ""];
+    context.fillStyle = "#ffffff";
+    context.font = "400 88px Outfit, sans-serif";
+    context.fillText(formatIdentityMain(displayTitle[0] || ""), canvas.width / 2, 990);
+    context.font = "400 86px 'Absolut Handwritten', Outfit, sans-serif";
+    context.fillText(formatIdentityScript(displayTitle[1] || ""), canvas.width / 2, 1080);
+
+    context.fillStyle = "#64645f";
+    context.font = "400 42px Outfit, sans-serif";
+    wrapCanvasText(context, identity.description, canvas.width / 2, 1245, 840, 54);
+
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) {
+      return null;
+    }
+
+    return new File([blob], "daily-sin-result.png", { type: "image/png" });
+  } catch (error) {
+    console.error("Share image creation failed", error);
+    return null;
+  }
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = "anonymous";
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function drawCoverImage(context, image, x, y, width, height) {
+  const imageRatio = image.width / image.height;
+  const boxRatio = width / height;
+  const sourceWidth = imageRatio > boxRatio ? image.height * boxRatio : image.width;
+  const sourceHeight = imageRatio > boxRatio ? image.height : image.width / boxRatio;
+  const sourceX = (image.width - sourceWidth) / 2;
+  const sourceY = (image.height - sourceHeight) / 2;
+  context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, x, y, width, height);
+}
+
+function wrapCanvasText(context, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(" ");
+  let line = "";
+
+  words.forEach((word, index) => {
+    const testLine = line ? `${line} ${word}` : word;
+    if (context.measureText(testLine).width > maxWidth && line) {
+      context.fillText(line, x, y);
+      line = word;
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+
+    if (index === words.length - 1 && line) {
+      context.fillText(line, x, y);
+    }
+  });
 }
 
 function showCopiedState(text) {
@@ -360,6 +511,20 @@ function showCopiedState(text) {
 function playAgain() {
   track("play_again");
   startGame();
+}
+
+function formatIdentityMain(value) {
+  return toTitleCase(value);
+}
+
+function formatIdentityScript(value) {
+  return toTitleCase(value).toUpperCase();
+}
+
+function toTitleCase(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function escapeHtml(value) {
