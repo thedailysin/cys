@@ -1,4 +1,4 @@
-const QUESTIONS = [
+const ALL_QUESTIONS = [
   {
     id: "q1",
     question: "You've ordered Zomato. Then you remember you're supposed to go to the gym.",
@@ -336,5 +336,10 @@ const QUESTIONS = [
     ]
   }
 ];
+
+const SELECTED_QUESTION_IDS = ["q1", "q3", "q6", "q11", "q16", "q19", "q20"];
+const QUESTIONS = SELECTED_QUESTION_IDS
+  .map((id) => ALL_QUESTIONS.find((question) => question.id === id))
+  .filter(Boolean);
 
 globalThis.QUESTIONS = QUESTIONS;

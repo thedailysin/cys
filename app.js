@@ -20,6 +20,7 @@ let interactionLocked = false;
 const pendingPostHogEvents = [];
 const RETORT_DURATION = 2160;
 const CARD_COLORS = ["#37C155", "#47D86A", "#22B84B", "#7BEA8F", "#B6F35C", "#19C98B", "#D8FF64"];
+const RESULT_REVEAL_DURATION = 1200;
 
 function track(eventName, properties) {
   try {
@@ -259,34 +260,43 @@ function renderQuiz() {
   setScreen(`
     <section class="screen quiz-screen is-changing">
       <div class="quiz-shell">
-        <div class="swipe-card quiz-content" id="quizContent" style="--card-bg: ${getCardColor(state.currentQuestionIndex)}">
-          <div class="swipe-label swipe-label-left">${escapeHtml(question.answers[0].text)}</div>
-          <div class="swipe-label swipe-label-right">${escapeHtml(question.answers[1].text)}</div>
-          <h2 class="question">${escapeHtml(question.question)}</h2>
-          <div class="answers">
-            ${question.answers.map((answer, index) => `
-              <button
-                class="answer-button"
-                type="button"
-                data-answer-index="${index}"
-                aria-label="${escapeHtml(answer.text)}"
-              >${escapeHtml(answer.text)}</button>
-            `).join("")}
+        <div class="deck-stage">
+          ${renderDeckBacks()}
+          <div class="swipe-card quiz-card" id="quizContent" style="--card-bg: ${getCardColor(state.currentQuestionIndex)}">
+            <h2 class="question">${escapeHtml(question.question)}</h2>
+            <div class="direction-row">
+              <button class="direction-choice direction-left" type="button" data-answer-index="0">
+                <span>←</span>
+                <span>${escapeHtml(question.answers[0].text)}</span>
+              </button>
+              <button class="direction-choice direction-right" type="button" data-answer-index="1">
+                <span>${escapeHtml(question.answers[1].text)}</span>
+                <span>→</span>
+              </button>
+            </div>
+            <p class="swipe-hint">Swipe toward your answer</p>
           </div>
-          <p class="swipe-hint">Swipe left or right</p>
         </div>
         ${renderProgress()}
       </div>
     </section>
   `, () => {
-    app.querySelectorAll(".answer-button").forEach((button) => {
-      button.addEventListener("click", () => selectAnswer(Number(button.dataset.answerIndex)));
+    app.querySelectorAll(".direction-choice").forEach((button) => {
+      const index = Number(button.dataset.answerIndex);
+      button.addEventListener("click", () => selectAnswer(index, index === 0 ? "left" : "right"));
     });
     setupSwipeCard(document.getElementById("quizContent"), {
       onLeft: () => selectAnswer(0, "left"),
       onRight: () => selectAnswer(1, "right")
     });
   });
+}
+
+function renderDeckBacks() {
+  return `
+    <div class="deck-back deck-back-one"></div>
+    <div class="deck-back deck-back-two"></div>
+  `;
 }
 
 function renderProgress() {
@@ -332,13 +342,7 @@ function selectAnswer(answerIndex, direction) {
   }
 
   window.setTimeout(() => {
-    if (!quizContent) {
-      return;
-    }
-    quizContent.classList.remove("is-swiped-left", "is-swiped-right");
-    quizContent.style.transform = "";
-    quizContent.innerHTML = `<p class="retort">${escapeHtml(answer.retort)}</p>`;
-    quizContent.classList.add("is-retort");
+    renderRetort(answer.retort);
   }, 300);
 
   window.setTimeout(() => {
@@ -353,31 +357,49 @@ function selectAnswer(answerIndex, direction) {
   }, RETORT_DURATION);
 }
 
+function renderRetort(retort) {
+  setScreen(`
+    <section class="screen quiz-screen">
+      <div class="quiz-shell">
+        <div class="deck-stage">
+          ${renderDeckBacks()}
+          <div class="swipe-card retort-card" style="--card-bg: ${getCardColor(state.currentQuestionIndex + 1)}">
+            <div class="retort-timer" aria-hidden="true"></div>
+            <p class="retort">${escapeHtml(retort)}</p>
+          </div>
+        </div>
+        ${renderProgress()}
+      </div>
+    </section>
+  `);
+}
+
 function renderLeadForm() {
   setScreen(`
     <section class="screen lead-screen is-changing">
-      <form class="swipe-card lead-form" id="leadForm" style="--card-bg: #F4FFF6" novalidate>
-        <h2 class="screen-title"><span>Before we make this</span> <span class="handwritten">Official</span></h2>
+      <div class="deck-stage">
+        <form class="swipe-card lead-form" id="leadForm" style="--card-bg: #F4FFF6" novalidate>
+          <h2 class="screen-title"><span>Before we make this</span> <span class="handwritten">Official</span></h2>
 
-        <label class="field">
-          <span class="visually-hidden">Name</span>
-          <input id="leadName" name="name" type="text" autocomplete="name" placeholder="Name" required>
-        </label>
+          <label class="field">
+            <span class="visually-hidden">Name</span>
+            <input id="leadName" name="name" type="text" autocomplete="name" placeholder="Name" required>
+          </label>
 
-        <label class="field">
-          <span class="visually-hidden">Email</span>
-          <input id="leadEmail" name="email" type="email" autocomplete="email" placeholder="Email" required>
-        </label>
+          <label class="field">
+            <span class="visually-hidden">Email</span>
+            <input id="leadEmail" name="email" type="email" autocomplete="email" placeholder="Email" required>
+          </label>
 
-        <label class="field">
-          <span class="visually-hidden">Phone</span>
-          <input id="leadPhone" name="phone" type="tel" autocomplete="tel" placeholder="Phone (optional)">
-        </label>
+          <label class="field">
+            <span class="visually-hidden">Phone</span>
+            <input id="leadPhone" name="phone" type="tel" autocomplete="tel" placeholder="Phone (optional)">
+          </label>
 
-        <p class="form-error" id="formError" role="alert"></p>
-        <button class="button button-primary" type="submit" id="leadSubmit">Reveal Result</button>
-        <p class="swipe-hint">Swipe to reveal</p>
-      </form>
+          <p class="form-error" id="formError" role="alert"></p>
+          <p class="lead-disclaimer">Swipe to reveal. By swiping, you agree to hear from The Daily Sin about offers, updates, and questionable choices.</p>
+        </form>
+      </div>
       ${renderProgress()}
     </section>
   `, () => {
@@ -385,6 +407,7 @@ function renderLeadForm() {
     form.addEventListener("submit", submitLead);
     setupSwipeCard(form, {
       ignoreInteractive: true,
+      animateOnSwipe: false,
       onLeft: () => submitLead(),
       onRight: () => submitLead()
     });
@@ -400,9 +423,9 @@ async function submitLead(event) {
   const email = document.getElementById("leadEmail").value.trim();
   const phone = document.getElementById("leadPhone").value.trim();
   const error = document.getElementById("formError");
-  const button = document.getElementById("leadSubmit");
+  const form = document.getElementById("leadForm");
 
-  if (button.disabled) {
+  if (interactionLocked) {
     return;
   }
 
@@ -417,8 +440,10 @@ async function submitLead(event) {
   }
 
   error.textContent = "";
-  button.disabled = true;
-  button.textContent = "Thinking...";
+  interactionLocked = true;
+  if (form) {
+    form.classList.add("is-swiped-right");
+  }
 
   state.lead = { name, email, phone };
   state.identityKey = calculateIdentity(state.answerHistory);
@@ -434,6 +459,21 @@ async function submitLead(event) {
     userAgent: navigator.userAgent
   };
 
+  submitLeadPayload(payload);
+
+  track("lead_submitted", {
+    identity: identity.title
+  });
+  track("identity_assigned", {
+    identity: identity.title
+  });
+
+  window.setTimeout(() => {
+    renderResultTravel();
+  }, 260);
+}
+
+async function submitLeadPayload(payload) {
   try {
     await fetch(CONFIG.GOOGLE_SCRIPT_ENDPOINT, {
       method: "POST",
@@ -443,18 +483,41 @@ async function submitLead(event) {
   } catch (submitError) {
     console.error("Lead submission failed", submitError);
   }
-
-  track("lead_submitted", {
-    identity: identity.title
-  });
-  track("identity_assigned", {
-    identity: identity.title
-  });
-
-  renderResult();
 }
 
-function renderResult() {
+function renderResultTravel() {
+  const identity = IDENTITIES[state.identityKey] || IDENTITIES.sinnerAmateur;
+  const imageUrl = CONFIG.IDENTITY_IMAGES[state.identityKey] || "";
+
+  setScreen(`
+    <section class="screen result-travel-screen">
+      <div class="travel-wrap">
+        <div class="travel-card">
+          ${imageUrl ? `<img class="identity-image" src="${escapeAttribute(imageUrl)}" alt="">` : ""}
+        </div>
+      </div>
+    </section>
+  `);
+
+  Promise.race([
+    preloadResultImage(imageUrl),
+    new Promise((resolve) => window.setTimeout(resolve, 900))
+  ]).finally(() => {
+    window.setTimeout(() => renderResult(true), RESULT_REVEAL_DURATION);
+  });
+}
+
+function preloadResultImage(imageUrl) {
+  if (!imageUrl) {
+    return Promise.resolve();
+  }
+
+  return loadImage(imageUrl).catch((error) => {
+    console.error("Result image preload failed", error);
+  });
+}
+
+function renderResult(showConfetti) {
   if (!state.identityKey) {
     state.identityKey = calculateIdentity(state.answerHistory);
   }
@@ -468,16 +531,28 @@ function renderResult() {
         <p class="result-kicker">You are a</p>
         ${renderResultCard(identity, imageUrl)}
         <p class="identity-description">${escapeHtml(identity.description)}</p>
-        <div class="result-actions">
-          <button class="button button-primary" type="button" id="shareButton">Forward to Someone Worse</button>
-          <button class="button button-secondary icon-button" type="button" id="playAgainButton" aria-label="Play Again">↻</button>
+        <div class="result-swipe-actions">
+          <span>← Do it again</span>
+          <span>Forward to someone worse →</span>
         </div>
+        ${showConfetti ? renderConfetti() : ""}
       </div>
     </section>
   `, () => {
-    document.getElementById("shareButton").addEventListener("click", shareResult);
-    document.getElementById("playAgainButton").addEventListener("click", playAgain);
+    const resultCard = document.querySelector(".result-card");
+    setupSwipeCard(resultCard, {
+      onLeft: playAgain,
+      onRight: shareResult
+    });
   });
+}
+
+function renderConfetti() {
+  return `
+    <div class="confetti" aria-hidden="true">
+      ${Array.from({ length: 16 }, (_, index) => `<span style="--r: ${index * 24}deg; --r2: ${index * 58}deg"></span>`).join("")}
+    </div>
+  `;
 }
 
 function setupSwipeCard(card, options) {
@@ -527,9 +602,19 @@ function setupSwipeCard(card, options) {
 
     if (Math.abs(currentX) >= threshold) {
       if (currentX < 0) {
+        if (options.animateOnSwipe !== false) {
+          card.classList.add("is-swiped-left");
+        }
         options.onLeft();
       } else {
+        if (options.animateOnSwipe !== false) {
+          card.classList.add("is-swiped-right");
+        }
         options.onRight();
+      }
+      if (options.animateOnSwipe === false && !interactionLocked) {
+        card.style.transform = "";
+        card.removeAttribute("data-swipe");
       }
       return;
     }
@@ -725,15 +810,15 @@ function wrapCanvasText(context, text, x, y, maxWidth, lineHeight) {
 }
 
 function showCopiedState(text) {
-  const button = document.getElementById("shareButton");
-  if (!button) {
+  const target = document.getElementById("shareButton") || document.querySelector(".result-swipe-actions span:last-child");
+  if (!target) {
     return;
   }
 
-  const original = button.textContent;
-  button.textContent = text || "Copied";
+  const original = target.textContent;
+  target.textContent = text || "Copied";
   window.setTimeout(() => {
-    button.textContent = original;
+    target.textContent = original;
   }, 1200);
 }
 
